@@ -187,6 +187,7 @@ namespace Kolotopir
             if (s != null)
             {
                 s.World.MarkDefeated(SpawnId, s.Clock.TotalHours);
+                if (this is EchoEnemy) s.Flags.Increment("ecos_derrotados");
                 Game.Ctx.AddXp(XpReward, "Combate");
                 if (!string.IsNullOrEmpty(BestiaryEntry)) Game.Ctx.AddNotebook(BestiaryEntry, Knowledge.Observado);
                 DropLoot();

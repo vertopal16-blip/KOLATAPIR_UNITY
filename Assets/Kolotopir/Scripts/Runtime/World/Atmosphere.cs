@@ -121,6 +121,8 @@ namespace Kolotopir
 
             if (ResonanceTint > 0f)
                 fog = Color.Lerp(fog, new Color(0.42f, 0.3f, 0.62f), ResonanceTint * 0.6f);
+            float pulse = _pulseLength > 0f ? Mathf.Clamp01((_pulseUntil - Time.time) / _pulseLength) : 0f;
+            if (pulse > 0f) fog = Color.Lerp(fog, _pulseColor * 0.7f, Mathf.Sin(pulse * Mathf.PI) * 0.5f);
             RenderSettings.fogColor = fog;
             float density = _region == Region.TribuDelReverso ? 0.0016f : _region == Region.ParadaAntigua ? 0.0021f : 0.0012f;
             density *= Mathf.Lerp(1f, 1.6f, Night);
@@ -142,6 +144,17 @@ namespace Kolotopir
         }
 
         public void SetRegion(Region r) => _region = r;
+
+        private float _pulseUntil, _pulseLength;
+        private Color _pulseColor;
+
+        /// <summary>Destello atmosférico breve (revelaciones, recuerdos completados).</summary>
+        public void Pulse(Color color, float seconds)
+        {
+            _pulseColor = color;
+            _pulseLength = Mathf.Max(0.1f, seconds);
+            _pulseUntil = Time.time + _pulseLength;
+        }
 
         private void Update()
         {

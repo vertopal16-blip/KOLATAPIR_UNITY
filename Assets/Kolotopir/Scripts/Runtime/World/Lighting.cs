@@ -56,6 +56,7 @@ namespace Kolotopir
         public static int MaxLights = 8;
         public static float MaxDistance = 70f;
         private static readonly List<LightSource> Sorted = new List<LightSource>();
+        public static int ActiveCount { get; private set; }
 
         public static void Update(Vector3 camPos, float night)
         {
@@ -74,6 +75,7 @@ namespace Kolotopir
                 return da.CompareTo(db);
             });
             for (int i = 0; i < Sorted.Count; i++) Sorted[i].Apply(i < MaxLights, night);
+            ActiveCount = Mathf.Min(Sorted.Count, MaxLights);
         }
     }
 

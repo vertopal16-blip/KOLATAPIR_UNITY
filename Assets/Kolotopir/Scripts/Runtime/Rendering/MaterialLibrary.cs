@@ -31,7 +31,7 @@ namespace Kolotopir
         {
             var res = Resources.Load<Material>("KolotopirMaterials/" + resource);
             Material m;
-            if (res != null && res.shader != null && res.shader.isSupported)
+            if (IsUrp && res != null && res.shader != null && res.shader.isSupported)
             {
                 m = new Material(res);
             }
