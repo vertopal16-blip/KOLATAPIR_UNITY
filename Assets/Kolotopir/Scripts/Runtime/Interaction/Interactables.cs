@@ -84,7 +84,7 @@ namespace Kolotopir
             Game.Ctx.GiveItem(ItemId, count);
             if (Renewable) s.World.MarkDefeated(Id, s.Clock.TotalHours);
             else s.World.MarkTaken(Id);
-            Game.Audio?.Play3D(Renewable ? "gather" : "pickup", transform.position, 0.8f);
+            Game.Audio?.Play3D(Renewable ? "recolectar" : "recoger", transform.position, 0.8f);
             SetHidden(true);
             Game.MarkDirty();
         }
@@ -112,7 +112,7 @@ namespace Kolotopir
             _open = true;
             foreach (var it in Def.Contents) Game.Ctx.GiveItem(it.ItemId, it.Count);
             Game.State.World.MarkTaken(Def.Id);
-            Game.Audio?.Play3D("chest", transform.position);
+            Game.Audio?.Play3D("cofre", transform.position);
             if (Lid != null) StartCoroutine(OpenLid());
             Game.MarkDirty();
         }
@@ -174,7 +174,7 @@ namespace Kolotopir
                 Def.OnExamine?.Invoke(Game.Ctx);
             }
             if (Def.ConsumeOnce) s.World.MarkTaken(Def.Id);
-            Game.Audio?.Play2D("examine", 0.6f);
+            Game.Audio?.Play2D("examinar", 0.6f);
             Game.MarkDirty();
         }
     }
@@ -216,7 +216,7 @@ namespace Kolotopir
                 return;
             }
             Game.State.World.MarkTaken(Id);
-            Game.Audio?.Play3D("cut", transform.position);
+            Game.Audio?.Play3D("cortar", transform.position);
             Game.Ctx.AddNotebook("loc_gruta", Knowledge.Observado);
             gameObject.SetActive(false);
         }
