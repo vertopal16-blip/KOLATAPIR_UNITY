@@ -26,15 +26,15 @@ namespace Kolotopir
 
         private void Build(Transform root)
         {
-            var sleeve = MaterialLibrary.Lit(Pal.Tunic, 0.15f);
-            var sleeveDark = MaterialLibrary.Lit(K.Mul(Pal.Tunic, 0.75f), 0.15f);
-            var skin = MaterialLibrary.Lit(Pal.NiloSkin, 0.25f);
-            var leather = MaterialLibrary.Lit(new Color(0.42f, 0.29f, 0.2f), 0.2f);
+            var sleeve = MaterialLibrary.Surface(DetailKind.Fabric, Pal.Tunic, 0.15f);
+            var sleeveDark = MaterialLibrary.Surface(DetailKind.Fabric, K.Mul(Pal.Tunic, 0.75f), 0.15f);
+            var skin = MaterialLibrary.Surface(DetailKind.Skin, Pal.NiloSkin, 0.3f);
+            var leather = MaterialLibrary.Surface(DetailKind.Leather, new Color(0.42f, 0.29f, 0.2f), 0.22f);
             _right = K.Child(root, "BrazoDerecho");
             _left = K.Child(root, "BrazoIzquierdo");
             foreach (var arm in new[] { _right, _left })
             {
-                var mb = new ModelBuilder();
+                var mb = new ModelBuilder { SmoothAngle = 70f, Detail = 1.5f };
                 mb.For(sleeve).Cylinder(new Vector3(0f, 0f, -0.5f), 0.085f, 0.07f, 0.42f, 8, Quaternion.Euler(90f, 0f, 0f));
                 mb.For(sleeveDark).Cylinder(new Vector3(0f, 0f, -0.1f), 0.075f, 0.078f, 0.05f, 8, Quaternion.Euler(90f, 0f, 0f));
                 mb.For(skin).Cylinder(new Vector3(0f, 0f, -0.08f), 0.05f, 0.048f, 0.1f, 7, Quaternion.Euler(90f, 0f, 0f));
@@ -42,7 +42,7 @@ namespace Kolotopir
                 mb.For(skin).Sphere(new Vector3(arm == _right ? -0.04f : 0.04f, 0.01f, 0.04f), new Vector3(0.02f, 0.02f, 0.045f), 5, 3, Quaternion.Euler(0f, arm == _right ? -30f : 30f, 0f));
                 foreach (var r in mb.Build(arm, "Brazo", false, false)) r.gameObject.layer = 0;
                 var bracer = K.Child(arm, "Brazal");
-                var bmb = new ModelBuilder();
+                var bmb = new ModelBuilder { SmoothAngle = 70f, Detail = 1.5f };
                 bmb.For(leather).Cylinder(new Vector3(0f, 0f, -0.3f), 0.088f, 0.08f, 0.17f, 8, Quaternion.Euler(90f, 0f, 0f));
                 bmb.For(MaterialLibrary.Lit(new Color(0.3f, 0.2f, 0.14f), 0.2f)).Cylinder(new Vector3(0f, 0f, -0.26f), 0.09f, 0.09f, 0.02f, 8, Quaternion.Euler(90f, 0f, 0f));
                 bmb.Build(bracer, "Brazal", false, false);
@@ -50,7 +50,7 @@ namespace Kolotopir
             }
             // Espada corta del Reverso
             _sword = K.Child(_right, "Espada", new Vector3(0f, 0f, 0.05f), Quaternion.Euler(60f, 0f, 0f));
-            var smb = new ModelBuilder();
+            var smb = new ModelBuilder { SmoothAngle = 70f, Detail = 1.5f };
             smb.For(MaterialLibrary.Lit(new Color(0.25f, 0.18f, 0.13f), 0.2f)).Cylinder(new Vector3(0f, -0.08f, 0f), 0.018f, 0.018f, 0.16f, 6, Quaternion.identity);
             smb.For(MaterialLibrary.Lit(new Color(0.55f, 0.45f, 0.3f), 0.5f, 0.6f)).Box(new Vector3(0f, 0.09f, 0f), new Vector3(0.15f, 0.025f, 0.035f), Quaternion.identity);
             smb.For(MaterialLibrary.Lit(new Color(0.7f, 0.73f, 0.77f), 0.75f, 0.85f)).Box(new Vector3(0f, 0.43f, 0f), new Vector3(0.045f, 0.62f, 0.012f), Quaternion.identity);
@@ -67,11 +67,11 @@ namespace Kolotopir
             gmr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
             // Catalejo y venda en la mano izquierda
             _spyglass = K.Child(_left, "Catalejo", new Vector3(0f, 0.02f, 0.12f));
-            var cmb = new ModelBuilder();
+            var cmb = new ModelBuilder { SmoothAngle = 70f, Detail = 1.5f };
             cmb.For(MaterialLibrary.Lit(new Color(0.69f, 0.55f, 0.34f), 0.6f, 0.7f)).Cylinder(Vector3.zero, 0.03f, 0.024f, 0.32f, 8, Quaternion.Euler(90f, 0f, 0f));
             cmb.Build(_spyglass, "Catalejo", false, false);
             _bandage = K.Child(_left, "Venda", new Vector3(0f, 0.04f, 0.1f));
-            var vmb = new ModelBuilder();
+            var vmb = new ModelBuilder { SmoothAngle = 70f, Detail = 1.5f };
             vmb.For(MaterialLibrary.Lit(new Color(0.92f, 0.9f, 0.84f), 0.1f)).Cylinder(Vector3.zero, 0.045f, 0.045f, 0.08f, 8, Quaternion.Euler(0f, 0f, 90f));
             vmb.Build(_bandage, "Venda", false, false);
             _rPos = new Vector3(0.3f, -0.6f, 0.3f);

@@ -47,7 +47,7 @@ namespace Kolotopir
             _core = MaterialLibrary.LitInstance(new Color(0.75f, 0.8f, 1f), 0.5f);
             MaterialLibrary.SetEmission(_core, Pal.Echo);
             FlashMaterials.Add(_body);
-            var mb = new ModelBuilder();
+            var mb = new ModelBuilder { SmoothAngle = 70f, Detail = 1.4f };
             // Kolotapir anciano hecho de eco: cuerpo robusto, hocico de tapir, orejas, bastón
             mb.For(_body).Lathe(Vector3.zero, new[] { new Vector2(0.3f, 0f), new Vector2(0.9f, 0.6f), new Vector2(1.05f, 1.4f), new Vector2(0.85f, 2.3f), new Vector2(0.5f, 2.7f), new Vector2(0f, 2.8f) }, 12, Quaternion.identity, true, false);
             mb.For(_body).Sphere(new Vector3(0f, 3.05f, 0.1f), new Vector3(0.48f, 0.45f, 0.5f), 10, 7, Quaternion.identity);
@@ -63,12 +63,12 @@ namespace Kolotopir
             _armL = K.Child(_visual, "BrazoI", new Vector3(-0.95f, 2.3f, 0f));
             foreach (var arm in new[] { _armR, _armL })
             {
-                var ab = new ModelBuilder();
+                var ab = new ModelBuilder { SmoothAngle = 70f, Detail = 1.4f };
                 ab.For(_body).Cylinder(Vector3.zero, 0.24f, 0.18f, 1.5f, 8, Quaternion.Euler(180f, 0f, 0f));
                 ab.For(_body).Sphere(new Vector3(0f, -1.55f, 0f), Vector3.one * 0.3f, 8, 5, Quaternion.identity);
                 ab.Build(arm, "Brazo", false, false);
             }
-            var staff = new ModelBuilder();
+            var staff = new ModelBuilder { SmoothAngle = 70f, Detail = 1.4f };
             staff.For(_body).Cylinder(new Vector3(0f, -1.6f, 0.2f), 0.06f, 0.06f, 3.4f, 6, Quaternion.identity);
             staff.For(_core).Sphere(new Vector3(0f, 1.9f, 0.2f), Vector3.one * 0.2f, 8, 5, Quaternion.identity);
             staff.Build(_armR, "Baston", false, false);

@@ -80,6 +80,9 @@ namespace Kolotopir
             Game.UI.SetLoading(true, 0.08f, "Afinando los sonidos del mundo…");
             yield return Game.Audio.Init();
 
+            Game.UI.SetLoading(true, 0.22f, "Tejiendo las texturas de Orom…");
+            yield return SurfaceTextures.Init();
+
             Game.UI.SetLoading(true, 0.3f, "Pintando el cielo…");
             yield return null;
             var skyGo = new GameObject("Atmosfera");

@@ -20,10 +20,10 @@ namespace Kolotopir
             mb.For(MaterialLibrary.Emissive(new Color(0.7f, 0.6f, 0.5f), new Color(0.4f, 0.3f, 0.15f), 0.6f)).Box(new Vector3(-1.5f, 0.9f, -1.0f), new Vector3(0.18f, 0.18f, 0.02f), Quaternion.Euler(0f, 0f, 45f));
             Colliders.Box(cols, new Vector3(-1.5f, 1.1f, -1.5f), new Vector3(1.1f, 2.2f, 1.1f));
             // Refugio de troncos y lona
-            var wood = MaterialLibrary.Lit(Pal.Wood, 0.1f);
+            var wood = MaterialLibrary.World(Pal.Wood, 0.1f);
             mb.For(wood).Box(new Vector3(1.6f, 1.0f, -1.6f), new Vector3(0.14f, 2f, 0.14f), Quaternion.identity);
             mb.For(wood).Box(new Vector3(3.6f, 1.0f, -1.6f), new Vector3(0.14f, 2f, 0.14f), Quaternion.identity);
-            mb.For(MaterialLibrary.Lit(new Color(0.7f, 0.6f, 0.45f), 0.05f)).Box(new Vector3(2.6f, 1.45f, -0.5f), new Vector3(2.4f, 0.06f, 2.6f), Quaternion.Euler(-35f, 0f, 0f));
+            mb.For(MaterialLibrary.World(new Color(0.7f, 0.6f, 0.45f), 0.05f)).Box(new Vector3(2.6f, 1.45f, -0.5f), new Vector3(2.4f, 0.06f, 2.6f), Quaternion.Euler(-35f, 0f, 0f));
             // Hoguera
             for (int i = 0; i < 8; i++)
             {
@@ -43,19 +43,19 @@ namespace Kolotopir
             var cols = K.Child(t, "Colisiones");
             // Tienda remendada
             var tent = new Vector3(-4f, 0f, 2.5f);
-            mb.For(MaterialLibrary.Lit(new Color(0.78f, 0.66f, 0.48f), 0.05f)).Cone(tent, 2.4f, 3.2f, 8, Quaternion.identity, false);
-            mb.For(MaterialLibrary.Lit(new Color(0.6f, 0.36f, 0.3f), 0.05f)).Box(tent + new Vector3(1.0f, 1.3f, 1.1f), new Vector3(0.7f, 0.6f, 0.05f), Quaternion.Euler(-30f, 40f, 0f));
-            mb.For(MaterialLibrary.Lit(new Color(0.42f, 0.5f, 0.6f), 0.05f)).Box(tent + new Vector3(-0.9f, 1.5f, 0.9f), new Vector3(0.5f, 0.5f, 0.05f), Quaternion.Euler(-30f, -40f, 0f));
+            mb.For(MaterialLibrary.World(new Color(0.78f, 0.66f, 0.48f), 0.05f)).Cone(tent, 2.4f, 3.2f, 8, Quaternion.identity, false);
+            mb.For(MaterialLibrary.World(new Color(0.6f, 0.36f, 0.3f), 0.05f)).Box(tent + new Vector3(1.0f, 1.3f, 1.1f), new Vector3(0.7f, 0.6f, 0.05f), Quaternion.Euler(-30f, 40f, 0f));
+            mb.For(MaterialLibrary.World(new Color(0.42f, 0.5f, 0.6f), 0.05f)).Box(tent + new Vector3(-0.9f, 1.5f, 0.9f), new Vector3(0.5f, 0.5f, 0.05f), Quaternion.Euler(-30f, -40f, 0f));
             Colliders.Capsule(cols, tent + Vector3.up * 1.2f, 1.6f, 2.6f);
             // Carro con la colección de objetos inútiles
             var cart = new Vector3(3.2f, 0f, 1.8f);
-            var wood = MaterialLibrary.Lit(Pal.Wood, 0.1f);
+            var wood = MaterialLibrary.World(Pal.Wood, 0.1f);
             mb.For(wood).Box(cart + new Vector3(0f, 0.9f, 0f), new Vector3(2.8f, 0.15f, 1.5f), Quaternion.identity);
             mb.For(wood).Box(cart + new Vector3(0f, 1.2f, 0.72f), new Vector3(2.8f, 0.5f, 0.08f), Quaternion.identity);
             mb.For(wood).Box(cart + new Vector3(0f, 1.2f, -0.72f), new Vector3(2.8f, 0.5f, 0.08f), Quaternion.identity);
             foreach (float x in new[] { -0.9f, 0.9f })
                 foreach (float z in new[] { -0.85f, 0.85f })
-                    mb.For(MaterialLibrary.Lit(Pal.WoodDark, 0.1f)).Cylinder(cart + new Vector3(x, 0.55f, z), 0.55f, 0.55f, 0.1f, 10, Quaternion.Euler(90f, 0f, 0f));
+                    mb.For(MaterialLibrary.World(Pal.WoodDark, 0.1f)).Cylinder(cart + new Vector3(x, 0.55f, z), 0.55f, 0.55f, 0.1f, 10, Quaternion.Euler(90f, 0f, 0f));
             var rng = new OromRandom(808);
             Color[] junk = { new Color(0.7f, 0.7f, 0.68f), new Color(0.6f, 0.45f, 0.25f), new Color(0.75f, 0.6f, 0.3f), new Color(0.4f, 0.5f, 0.6f), new Color(0.65f, 0.3f, 0.25f) };
             for (int i = 0; i < 22; i++)
@@ -64,16 +64,16 @@ namespace Kolotopir
                 var c = junk[i % junk.Length];
                 switch (i % 4)
                 {
-                    case 0: mb.For(MaterialLibrary.Lit(c, 0.5f, 0.6f)).Cylinder(p, 0.12f, 0.08f, 0.22f, 7, Quaternion.Euler(rng.Range(0f, 90f), 0f, 0f)); break;
-                    case 1: mb.For(MaterialLibrary.Lit(c, 0.3f)).Box(p, new Vector3(0.25f, 0.18f, 0.2f), Quaternion.Euler(0f, rng.Range(0f, 90f), 0f)); break;
-                    case 2: mb.For(MaterialLibrary.Lit(c, 0.6f, 0.7f)).Sphere(p, Vector3.one * 0.12f, 6, 4, Quaternion.identity); break;
-                    default: mb.For(MaterialLibrary.Lit(c, 0.6f, 0.7f)).Lathe(p, new[] { new Vector2(0.12f, 0f), new Vector2(0.14f, 0.15f), new Vector2(0.06f, 0.25f) }, 6, Quaternion.identity); break;
+                    case 0: mb.For(MaterialLibrary.World(c, 0.5f, 0.6f)).Cylinder(p, 0.12f, 0.08f, 0.22f, 7, Quaternion.Euler(rng.Range(0f, 90f), 0f, 0f)); break;
+                    case 1: mb.For(MaterialLibrary.World(c, 0.3f)).Box(p, new Vector3(0.25f, 0.18f, 0.2f), Quaternion.Euler(0f, rng.Range(0f, 90f), 0f)); break;
+                    case 2: mb.For(MaterialLibrary.World(c, 0.6f, 0.7f)).Sphere(p, Vector3.one * 0.12f, 6, 4, Quaternion.identity); break;
+                    default: mb.For(MaterialLibrary.World(c, 0.6f, 0.7f)).Lathe(p, new[] { new Vector2(0.12f, 0f), new Vector2(0.14f, 0.15f), new Vector2(0.06f, 0.25f) }, 6, Quaternion.identity); break;
                 }
             }
             Colliders.Box(cols, cart + Vector3.up * 0.8f, new Vector3(2.9f, 1.6f, 1.6f));
             // Banco de trabajo de Boro
             var bench = new Vector3(-0.5f, 0f, 4.2f);
-            mb.For(MaterialLibrary.Lit(Pal.WoodLight, 0.1f)).Box(bench + Vector3.up * 0.8f, new Vector3(1.8f, 0.1f, 0.8f), Quaternion.identity);
+            mb.For(MaterialLibrary.World(Pal.WoodLight, 0.1f)).Box(bench + Vector3.up * 0.8f, new Vector3(1.8f, 0.1f, 0.8f), Quaternion.identity);
             for (int i = 0; i < 4; i++) mb.For(wood).Box(bench + new Vector3(i % 2 == 0 ? -0.8f : 0.8f, 0.4f, i < 2 ? -0.32f : 0.32f), new Vector3(0.1f, 0.8f, 0.1f), Quaternion.identity);
             Colliders.Box(cols, bench + Vector3.up * 0.4f, new Vector3(1.8f, 0.8f, 0.8f));
             // Hoguera con tetera
@@ -82,12 +82,12 @@ namespace Kolotopir
                 float a = i * Mathf.PI / 4f;
                 mb.For(Pal.StoneDark).Rock(new Vector3(Mathf.Cos(a) * 0.8f, 0.1f, Mathf.Sin(a) * 0.8f), new Vector3(0.4f, 0.28f, 0.35f), Quaternion.identity, 840 + i, 0.25f, false);
             }
-            mb.For(MaterialLibrary.Lit(new Color(0.3f, 0.32f, 0.3f), 0.5f, 0.6f)).Lathe(new Vector3(0.5f, 0.15f, 0.2f), new[] { new Vector2(0.14f, 0f), new Vector2(0.18f, 0.12f), new Vector2(0.08f, 0.24f) }, 8, Quaternion.identity);
+            mb.For(MaterialLibrary.World(new Color(0.3f, 0.32f, 0.3f), 0.5f, 0.6f)).Lathe(new Vector3(0.5f, 0.15f, 0.2f), new[] { new Vector2(0.14f, 0f), new Vector2(0.18f, 0.12f), new Vector2(0.08f, 0.24f) }, 8, Quaternion.identity);
             mb.For(Pal.Wood).Cylinder(new Vector3(-1.8f, 0.25f, -0.8f), 0.25f, 0.25f, 2f, 8, Quaternion.Euler(0f, 30f, 90f));
             // Cuerda con ropa tendida
             mb.For(Pal.Rope).Cylinder(new Vector3(-6f, 1.9f, -1f), 0.015f, 0.015f, 5f, 3, Quaternion.Euler(0f, 0f, -90f), false, false);
-            mb.For(MaterialLibrary.Lit(new Color(0.75f, 0.45f, 0.3f))).Box(new Vector3(-4.8f, 1.6f, -1f), new Vector3(0.6f, 0.6f, 0.03f), Quaternion.identity);
-            mb.For(MaterialLibrary.Lit(new Color(0.5f, 0.6f, 0.4f))).Box(new Vector3(-3.6f, 1.55f, -1f), new Vector3(0.5f, 0.7f, 0.03f), Quaternion.identity);
+            mb.For(MaterialLibrary.World(new Color(0.75f, 0.45f, 0.3f))).Box(new Vector3(-4.8f, 1.6f, -1f), new Vector3(0.6f, 0.6f, 0.03f), Quaternion.identity);
+            mb.For(MaterialLibrary.World(new Color(0.5f, 0.6f, 0.4f))).Box(new Vector3(-3.6f, 1.55f, -1f), new Vector3(0.5f, 0.7f, 0.03f), Quaternion.identity);
             mb.Build(t, "CampamentoBoro");
             FX.Fire(t, new Vector3(0f, 0.1f, 0f), 0.8f);
             LightSource.Create(K.Child(t, "Luz", new Vector3(0f, 1f, 0f)), Pal.Fire, 12f, 1.8f, false, 3, true);
@@ -110,14 +110,14 @@ namespace Kolotopir
         {
             var mb = new ModelBuilder();
             var cols = K.Child(t, "Colisiones");
-            var stone = MaterialLibrary.Lit(new Color(0.62f, 0.56f, 0.48f), 0.05f);
+            var stone = MaterialLibrary.World(new Color(0.62f, 0.56f, 0.48f), 0.05f);
             float h = WorldLayout.StoneArchHeight;
             foreach (float x in new[] { -4.5f, 4.5f })
             {
                 float baseY = WorldShape.Height(t.position.x + t.right.x * x, t.position.z + t.right.z * x) - t.position.y;
                 float ph = h - baseY;
                 for (int k = 0; k < 4; k++)
-                    mb.For(k % 2 == 0 ? stone : MaterialLibrary.Lit(new Color(0.56f, 0.5f, 0.44f), 0.05f))
+                    mb.For(k % 2 == 0 ? stone : MaterialLibrary.World(new Color(0.56f, 0.5f, 0.44f), 0.05f))
                         .Rock(new Vector3(x, baseY + ph * (k + 0.5f) / 4f, 0f), new Vector3(1.9f, ph / 4f + 0.4f, 1.8f), Quaternion.Euler(0f, k * 23f, 0f), 1200 + k + (int)x, 0.08f);
                 Tag(Colliders.Box(cols, new Vector3(x, baseY + ph * 0.5f - 0.3f, 0f), new Vector3(1.6f, ph - 0.6f, 1.6f), Quaternion.identity, "Pilar"), SurfaceKind.Piedra);
                 // Superficie plana sobre el pilar
@@ -135,7 +135,7 @@ namespace Kolotopir
                 mb.For(stone).Box(mid, new Vector3(Mathf.Abs(x1 - x0) + 0.2f, 1.2f, 1.1f), rot);
             }
             // Pasarela estrecha (0,7 m): equilibrio
-            mb.For(MaterialLibrary.Lit(new Color(0.68f, 0.62f, 0.52f), 0.05f)).Box(new Vector3(0f, h - 0.25f, 0f), new Vector3(8.2f, 0.5f, 0.7f), Quaternion.identity);
+            mb.For(MaterialLibrary.World(new Color(0.68f, 0.62f, 0.52f), 0.05f)).Box(new Vector3(0f, h - 0.25f, 0f), new Vector3(8.2f, 0.5f, 0.7f), Quaternion.identity);
             var beam = Colliders.Box(cols, new Vector3(0f, h - 0.25f, 0f), new Vector3(7.4f, 0.5f, 0.7f), Quaternion.identity, "Pasarela");
             beam.gameObject.AddComponent<BalanceBeam>();
             Tag(beam, SurfaceKind.Piedra);
@@ -153,9 +153,9 @@ namespace Kolotopir
         {
             var mb = new ModelBuilder();
             var cols = K.Child(t, "Colisiones");
-            var stone = MaterialLibrary.Lit(new Color(0.66f, 0.62f, 0.56f), 0.05f);
-            var stoneDark = MaterialLibrary.Lit(new Color(0.5f, 0.47f, 0.43f), 0.05f);
-            var moss = MaterialLibrary.Lit(Pal.Moss, 0.02f);
+            var stone = MaterialLibrary.World(new Color(0.66f, 0.62f, 0.56f), 0.05f);
+            var stoneDark = MaterialLibrary.World(new Color(0.5f, 0.47f, 0.43f), 0.05f);
+            var moss = MaterialLibrary.World(Pal.Moss, 0.02f);
             // Estrado circular
             mb.For(stone).Cylinder(new Vector3(0f, -0.2f, 0f), 5.6f, 5.2f, 0.7f, 18, Quaternion.identity);
             mb.For(stoneDark).Cylinder(new Vector3(0f, 0.45f, 0f), 4.4f, 4.4f, 0.06f, 18, Quaternion.identity);
@@ -227,21 +227,21 @@ namespace Kolotopir
         {
             var mb = new ModelBuilder();
             var cols = K.Child(t, "Colisiones");
-            var stone = MaterialLibrary.Lit(new Color(0.6f, 0.56f, 0.5f), 0.05f);
+            var stone = MaterialLibrary.World(new Color(0.6f, 0.56f, 0.5f), 0.05f);
             float w = 4.2f, d = 3.8f, h = 2.5f;
             mb.For(stone).Box(new Vector3(0f, h * 0.5f, -d * 0.5f), new Vector3(w, h, 0.4f), Quaternion.identity);
             mb.For(stone).Box(new Vector3(-w * 0.5f, h * 0.5f, 0f), new Vector3(0.4f, h, d), Quaternion.identity);
             mb.For(stone).Box(new Vector3(w * 0.5f, h * 0.5f, 0f), new Vector3(0.4f, h, d), Quaternion.identity);
-            mb.For(MaterialLibrary.Lit(new Color(0.52f, 0.48f, 0.43f), 0.05f)).Box(new Vector3(0f, h + 0.15f, 0f), new Vector3(w + 0.6f, 0.3f, d + 0.6f), Quaternion.Euler(-4f, 0f, 0f));
+            mb.For(MaterialLibrary.World(new Color(0.52f, 0.48f, 0.43f), 0.05f)).Box(new Vector3(0f, h + 0.15f, 0f), new Vector3(w + 0.6f, 0.3f, d + 0.6f), Quaternion.Euler(-4f, 0f, 0f));
             Colliders.Box(cols, new Vector3(0f, h * 0.5f, -d * 0.5f), new Vector3(w, h, 0.45f));
             Colliders.Box(cols, new Vector3(-w * 0.5f, h * 0.5f, 0f), new Vector3(0.45f, h, d));
             Colliders.Box(cols, new Vector3(w * 0.5f, h * 0.5f, 0f), new Vector3(0.45f, h, d));
             Colliders.Box(cols, new Vector3(0f, h + 0.15f, 0f), new Vector3(w + 0.6f, 0.3f, d + 0.6f));
             // Letras rayadas en la pared del fondo
-            var scratch = MaterialLibrary.Lit(new Color(0.42f, 0.38f, 0.34f), 0.05f);
+            var scratch = MaterialLibrary.World(new Color(0.42f, 0.38f, 0.34f), 0.05f);
             for (int i = 0; i < 9; i++)
                 mb.For(scratch).Box(new Vector3(-0.8f + i * 0.2f, 1.45f + (i % 2) * 0.05f, -d * 0.5f + 0.21f), new Vector3(0.12f, 0.02f, 0.01f), Quaternion.Euler(0f, 0f, (i * 37 % 60) - 30f));
-            mb.For(MaterialLibrary.Lit(new Color(0.55f, 0.45f, 0.35f))).Box(new Vector3(1.1f, 0.1f, -0.8f), new Vector3(1.6f, 0.15f, 0.9f), Quaternion.identity);
+            mb.For(MaterialLibrary.World(new Color(0.55f, 0.45f, 0.35f))).Box(new Vector3(1.1f, 0.1f, -0.8f), new Vector3(1.6f, 0.15f, 0.9f), Quaternion.identity);
             mb.Build(t, "Refugio");
             FirePoint.Register(t.position, 5f);
             LightSource.Create(K.Child(t, "Luz", new Vector3(0f, 1.8f, -0.5f)), Pal.Warm, 6f, 1f, true, 1);
@@ -259,7 +259,7 @@ namespace Kolotopir
                 float r = 3.6f - k * 0.12f;
                 mb.For(rocks[k % 2]).Rock(new Vector3(0f, y, 0f), new Vector3(r * 2f, h / 5f + 0.8f, r * 2f), Quaternion.Euler(0f, k * 31f, 0f), 1500 + k, 0.07f);
             }
-            mb.For(MaterialLibrary.Lit(new Color(0.58f, 0.55f, 0.5f), 0.05f)).Cylinder(new Vector3(0f, h - 0.3f, 0f), 3.3f, 3.1f, 0.3f, 10, Quaternion.identity);
+            mb.For(MaterialLibrary.World(new Color(0.58f, 0.55f, 0.5f), 0.05f)).Cylinder(new Vector3(0f, h - 0.3f, 0f), 3.3f, 3.1f, 0.3f, 10, Quaternion.identity);
             mb.For(Pal.Moss).Rock(new Vector3(-1f, h, 1f), new Vector3(1.4f, 0.3f, 1.2f), Quaternion.identity, 1510, 0.3f, false);
             mb.Build(t, "Mirador");
             Tag(Colliders.Box(cols, new Vector3(0f, h * 0.5f, 0f), new Vector3(6.6f, h, 6.6f), Quaternion.identity, "Roca"), SurfaceKind.Piedra);
@@ -294,10 +294,10 @@ namespace Kolotopir
             {
                 var p = new Vector3(4f + i * 1.6f, 0.06f, 3f);
                 mb.For(mats[i]).Box(p, new Vector3(1.2f, 0.12f, 2.6f), Quaternion.Euler(0f, 15f, 0f));
-                mb.For(MaterialLibrary.Lit(new Color(0.85f, 0.8f, 0.7f))).Box(p + new Vector3(0f, 0.1f, 1f), new Vector3(0.8f, 0.15f, 0.4f), Quaternion.Euler(0f, 15f, 0f));
+                mb.For(MaterialLibrary.World(new Color(0.85f, 0.8f, 0.7f))).Box(p + new Vector3(0f, 0.1f, 1f), new Vector3(0.8f, 0.15f, 0.4f), Quaternion.Euler(0f, 15f, 0f));
             }
             // Secadero de hierbas
-            var wood = MaterialLibrary.Lit(Pal.Wood, 0.1f);
+            var wood = MaterialLibrary.World(Pal.Wood, 0.1f);
             mb.For(wood).Box(new Vector3(-3f, 0.9f, 2f), new Vector3(0.1f, 1.8f, 0.1f), Quaternion.identity);
             mb.For(wood).Box(new Vector3(-1.2f, 0.9f, 2f), new Vector3(0.1f, 1.8f, 0.1f), Quaternion.identity);
             mb.For(wood).Box(new Vector3(-2.1f, 1.75f, 2f), new Vector3(2f, 0.08f, 0.08f), Quaternion.identity);
@@ -318,7 +318,7 @@ namespace Kolotopir
         {
             var mb = new ModelBuilder();
             var cols = K.Child(t, "Colisiones");
-            var stone = MaterialLibrary.Lit(new Color(0.7f, 0.64f, 0.55f), 0.05f);
+            var stone = MaterialLibrary.World(new Color(0.7f, 0.64f, 0.55f), 0.05f);
             // Arco de piedra sobre el camino (el frente +Z mira al este)
             foreach (float x in new[] { -3.5f, 3.5f })
             {

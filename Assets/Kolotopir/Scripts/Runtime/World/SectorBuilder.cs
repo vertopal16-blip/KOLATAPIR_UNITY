@@ -133,13 +133,16 @@ namespace Kolotopir
             terrain.drawInstanced = true;
             terrain.groupingID = 7;
             terrain.allowAutoConnect = true;
+            var terrainMat = MaterialLibrary.TerrainMaterial();
+            if (terrainMat != null) terrain.materialTemplate = terrainMat;
             s.Terrain = terrain;
             tgo.AddComponent<SurfaceTag>().Kind = SurfaceKind.Hierba;
             if (!immediate) yield return null;
 
             // --- Vegetación y rocas (lotes por material)
             var rng = new OromRandom(OromRandom.Hash(s.X, s.Z, 909));
-            var mb = new ModelBuilder();
+            // Formas orgánicas con sombreado suave (las aristas de más de 45° se conservan: rocas facetadas).
+            var mb = new ModelBuilder { SmoothAngle = 45f };
             var gathers = new List<Action>();
             int gatherIndex = 0;
             int built = 0;
@@ -415,18 +418,16 @@ namespace Kolotopir
             {
                 _grassMesh = Props.GrassTuftMesh();
                 _flowerMesh = Props.FlowerMesh();
+                var grassTex = SurfaceTextures.GrassCard;
                 _grassMats = new[]
                 {
-                    MaterialLibrary.Lit(new Color(0.36f, 0.52f, 0.2f), 0.05f),
-                    MaterialLibrary.Lit(new Color(0.46f, 0.6f, 0.24f), 0.05f),
+                    grassTex != null ? MaterialLibrary.Cutout(grassTex, new Color(0.42f, 0.56f, 0.22f), 0.05f, 0.4f) : MaterialLibrary.Lit(new Color(0.36f, 0.52f, 0.2f), 0.05f),
+                    grassTex != null ? MaterialLibrary.Cutout(grassTex, new Color(0.52f, 0.64f, 0.26f), 0.05f, 0.4f) : MaterialLibrary.Lit(new Color(0.46f, 0.6f, 0.24f), 0.05f),
                 };
-                _flowerMats = new[]
-                {
-                    MaterialLibrary.Lit(new Color(0.95f, 0.85f, 0.35f), 0.2f),
-                    MaterialLibrary.Lit(new Color(0.95f, 0.95f, 0.92f), 0.2f),
-                    MaterialLibrary.Lit(new Color(0.66f, 0.45f, 0.85f), 0.2f),
-                    MaterialLibrary.Lit(new Color(0.9f, 0.5f, 0.6f), 0.2f),
-                };
+                Color[] flowerFallback = { new Color(0.95f, 0.85f, 0.35f), new Color(0.95f, 0.95f, 0.92f), new Color(0.66f, 0.45f, 0.85f), new Color(0.9f, 0.5f, 0.6f) };
+                _flowerMats = new Material[4];
+                for (int i = 0; i < 4; i++)
+                    _flowerMats[i] = SurfaceTextures.FlowerCards[i] != null ? MaterialLibrary.Cutout(SurfaceTextures.FlowerCards[i], Color.white, 0.1f, 0.4f) : MaterialLibrary.Lit(flowerFallback[i], 0.2f);
                 foreach (var m in _grassMats) m.enableInstancing = true;
                 foreach (var m in _flowerMats) m.enableInstancing = true;
             }

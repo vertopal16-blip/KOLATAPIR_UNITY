@@ -44,7 +44,13 @@ namespace Kolotopir
     {
         public static void Build(Transform parent)
         {
-            var mat = MaterialLibrary.Transparent(new Color(0.24f, 0.45f, 0.58f, 0.72f), 0.92f);
+            var mat = MaterialLibrary.Transparent(new Color(0.22f, 0.42f, 0.5f, 0.74f), 0.94f);
+            if (SurfaceTextures.WaterNormal != null)
+            {
+                // Ondas: mapa de normales en mosaico de 7 m que se desplaza con el viento.
+                MaterialLibrary.SetNormal(mat, SurfaceTextures.WaterNormal, 0.4f);
+                MaterialLibrary.SetTiling(mat, 7f);
+            }
             foreach (var lake in WorldShape.Lakes)
             {
                 var b = new MeshBuilder();
@@ -77,12 +83,26 @@ namespace Kolotopir
     public sealed class WaterRipple : MonoBehaviour
     {
         private float _baseY;
-        private void Start() => _baseY = transform.position.y;
+        private Material _mat;
+
+        private void Start()
+        {
+            _baseY = transform.position.y;
+            var mr = GetComponent<MeshRenderer>();
+            _mat = mr != null ? mr.sharedMaterial : null;
+        }
+
         private void Update()
         {
             var p = transform.position;
             p.y = _baseY + Mathf.Sin(Time.time * 0.6f) * 0.03f;
             transform.position = p;
+            if (_mat != null)
+            {
+                var off = new Vector2(Time.time * 0.011f, Time.time * 0.007f);
+                if (_mat.HasProperty("_BaseMap")) _mat.SetTextureOffset("_BaseMap", off);
+                if (_mat.HasProperty("_MainTex")) _mat.SetTextureOffset("_MainTex", off);
+            }
         }
     }
 
@@ -235,25 +255,25 @@ namespace Kolotopir
                     case "fibra": Props.Reeds(mb, Vector3.zero, 3); break;
                     case "hierba": Props.Herb(mb, Vector3.zero, 5); break;
                     case "bayas":
-                        var berry = MaterialLibrary.Lit(new Color(0.62f, 0.12f, 0.3f), 0.5f);
+                        var berry = MaterialLibrary.World(new Color(0.62f, 0.12f, 0.3f), 0.5f);
                         for (int i = 0; i < 6; i++) mb.For(berry).Sphere(new Vector3(Mathf.Cos(i) * 0.12f, (i % 3) * 0.06f, Mathf.Sin(i) * 0.12f), Vector3.one * 0.06f, 5, 3, Quaternion.identity);
                         break;
                     case "resina":
                         mb.For(MaterialLibrary.Emissive(new Color(0.85f, 0.6f, 0.15f), new Color(0.5f, 0.3f, 0.05f), 0.6f)).Rock(Vector3.zero, new Vector3(0.18f, 0.24f, 0.12f), Quaternion.identity, 9, 0.3f, false);
                         break;
                     case "lasca":
-                        for (int i = 0; i < 3; i++) mb.For(MaterialLibrary.Lit(new Color(0.5f, 0.49f, 0.47f), 0.2f)).Rock(new Vector3(i * 0.18f - 0.18f, 0.06f, (i % 2) * 0.12f), new Vector3(0.22f, 0.14f, 0.18f), Quaternion.identity, 20 + i, 0.4f, false);
+                        for (int i = 0; i < 3; i++) mb.For(MaterialLibrary.World(new Color(0.5f, 0.49f, 0.47f), 0.2f)).Rock(new Vector3(i * 0.18f - 0.18f, 0.06f, (i % 2) * 0.12f), new Vector3(0.22f, 0.14f, 0.18f), Quaternion.identity, 20 + i, 0.4f, false);
                         break;
                     case "fragmento":
                         mb.For(MaterialLibrary.Emissive(new Color(0.7f, 0.6f, 0.9f), Pal.Resonance, 1.2f)).Cylinder(Vector3.zero, 0.07f, 0.0f, 0.38f, 4, Quaternion.Euler(12f, 0f, 18f));
                         mb.For(MaterialLibrary.Emissive(new Color(0.7f, 0.6f, 0.9f), Pal.Resonance, 1.2f)).Cylinder(new Vector3(0.1f, 0f, 0.05f), 0.05f, 0.0f, 0.24f, 4, Quaternion.Euler(-10f, 0f, -25f));
                         break;
                     case "cuchara_doblada":
-                        mb.For(MaterialLibrary.Lit(new Color(0.75f, 0.75f, 0.72f), 0.7f, 0.8f)).Box(new Vector3(0f, 0.02f, 0f), new Vector3(0.03f, 0.015f, 0.2f), Quaternion.Euler(18f, 30f, 0f));
-                        mb.For(MaterialLibrary.Lit(new Color(0.75f, 0.75f, 0.72f), 0.7f, 0.8f)).Sphere(new Vector3(0.05f, 0.04f, 0.09f), new Vector3(0.05f, 0.015f, 0.07f), 6, 3, Quaternion.Euler(0f, 30f, 0f));
+                        mb.For(MaterialLibrary.World(new Color(0.75f, 0.75f, 0.72f), 0.7f, 0.8f)).Box(new Vector3(0f, 0.02f, 0f), new Vector3(0.03f, 0.015f, 0.2f), Quaternion.Euler(18f, 30f, 0f));
+                        mb.For(MaterialLibrary.World(new Color(0.75f, 0.75f, 0.72f), 0.7f, 0.8f)).Sphere(new Vector3(0.05f, 0.04f, 0.09f), new Vector3(0.05f, 0.015f, 0.07f), 6, 3, Quaternion.Euler(0f, 30f, 0f));
                         break;
                     case "boton_nacar":
-                        mb.For(MaterialLibrary.Lit(new Color(0.95f, 0.93f, 0.9f), 0.9f)).Cylinder(Vector3.zero, 0.05f, 0.05f, 0.015f, 10, Quaternion.Euler(70f, 0f, 0f));
+                        mb.For(MaterialLibrary.World(new Color(0.95f, 0.93f, 0.9f), 0.9f)).Cylinder(Vector3.zero, 0.05f, 0.05f, 0.015f, 10, Quaternion.Euler(70f, 0f, 0f));
                         break;
                     default:
                         mb.For(MaterialLibrary.Emissive(Pal.Warm, Pal.Warm, 0.6f)).Sphere(Vector3.up * 0.1f, Vector3.one * 0.09f, 8, 5, Quaternion.identity);
@@ -310,7 +330,7 @@ namespace Kolotopir
                 {
                     var mb = new ModelBuilder();
                     mb.For(Pal.WoodLight).Cylinder(new Vector3(-0.08f, -0.05f, 0f), 0.02f, 0.02f, 0.14f, 6, Quaternion.Euler(0f, 0f, 90f));
-                    mb.For(MaterialLibrary.Lit(new Color(0.7f, 0.72f, 0.75f), 0.7f, 0.8f)).Box(new Vector3(0.06f, -0.05f, 0f), new Vector3(0.12f, 0.012f, 0.025f), Quaternion.identity);
+                    mb.For(MaterialLibrary.World(new Color(0.7f, 0.72f, 0.75f), 0.7f, 0.8f)).Box(new Vector3(0.06f, -0.05f, 0f), new Vector3(0.12f, 0.012f, 0.025f), Quaternion.identity);
                     mb.For(Pal.Wood).Rock(new Vector3(0.05f, -0.02f, 0.12f), new Vector3(0.12f, 0.1f, 0.18f), Quaternion.identity, 4, 0.2f, false);
                     mb.Build(holder, "Gubia", false);
                     FX.Sparkle(holder, Vector3.zero, new Color(1f, 0.9f, 0.7f, 0.7f), 0.15f, 2f);
@@ -334,8 +354,8 @@ namespace Kolotopir
         public static void Vines(Transform parent, float height)
         {
             var mb = new ModelBuilder();
-            var leaf = MaterialLibrary.Lit(new Color(0.24f, 0.45f, 0.2f), 0.1f);
-            var stem = MaterialLibrary.Lit(new Color(0.32f, 0.3f, 0.16f), 0.1f);
+            var leaf = MaterialLibrary.World(new Color(0.24f, 0.45f, 0.2f), 0.1f);
+            var stem = MaterialLibrary.World(new Color(0.32f, 0.3f, 0.16f), 0.1f);
             var rng = new OromRandom(77);
             for (int i = 0; i < 5; i++)
             {

@@ -19,7 +19,23 @@ namespace Kolotopir
     /// </summary>
     public static class HumanoidBuilder
     {
+        private static Material _override;
+
+        /// <summary>Material de superficie con textura (piel, tela, pelo...), salvo que se fuerce uno (fantasmas).</summary>
+        private static Material S(string hex, DetailKind kind, float smooth = 0.12f) => _override != null ? _override : MaterialLibrary.Surface(kind, K.Hex(hex), smooth);
+        private static Material SC(Color c, DetailKind kind, float smooth = 0.12f) => _override != null ? _override : MaterialLibrary.Surface(kind, c, smooth);
+
+        /// <summary>Constructor para personajes: sombreado suave y más segmentos (silueta y rostro más creíbles).</summary>
+        private static ModelBuilder NewMB() => new ModelBuilder { SmoothAngle = 72f, Detail = 1.6f };
+
         public static HumanoidRig Build(Transform parent, Species species, Appearance look, Material overrideMat = null, bool isNilo = false)
+        {
+            _override = overrideMat;
+            try { return BuildRig(parent, species, look, overrideMat, isNilo); }
+            finally { _override = null; }
+        }
+
+        private static HumanoidRig BuildRig(Transform parent, Species species, Appearance look, Material overrideMat, bool isNilo)
         {
             var rig = new HumanoidRig { Species = species, Height = look.Height };
             var root = new GameObject(species == Species.Kolotapir ? "Kolotapir" : "Humano").transform;
@@ -40,13 +56,13 @@ namespace Kolotopir
             float H = look.Height, b = look.Build;
             float leg = 0.47f * H, torso = 0.3f * H, headR = 0.068f * H;
             rig.HipHeight = leg;
-            var skin = M(look.Skin, 0.25f);
-            var cloth = M(look.Cloth);
-            var cloth2 = M(look.Cloth2);
-            var accent = M(look.Accent);
-            var pants = M(look.Pants);
-            var hair = M(look.Hair, 0.3f);
-            var boot = MC(new Color(0.28f, 0.2f, 0.14f), 0.2f);
+            var skin = S(look.Skin, DetailKind.Skin, 0.32f);
+            var cloth = S(look.Cloth, DetailKind.Fabric);
+            var cloth2 = S(look.Cloth2, DetailKind.Fabric);
+            var accent = S(look.Accent, DetailKind.Fabric);
+            var pants = S(look.Pants, DetailKind.Fabric);
+            var hair = S(look.Hair, DetailKind.Hair, 0.38f);
+            var boot = SC(new Color(0.28f, 0.2f, 0.14f), DetailKind.Leather, 0.25f);
 
             rig.Body = K.Child(rig.Root, "Cadera", new Vector3(0f, leg, 0f));
             // Piernas
@@ -54,7 +70,7 @@ namespace Kolotopir
             foreach (float side in new[] { -1f, 1f })
             {
                 var l = K.Child(rig.Body, side < 0 ? "PiernaI" : "PiernaD", new Vector3(side * hipW, 0f, 0f));
-                var mb = new ModelBuilder();
+                var mb = NewMB();
                 mb.For(pants).Cylinder(new Vector3(0f, -leg + 0.08f * H, 0f), 0.034f * H * b, 0.045f * H * b, leg - 0.08f * H, 7, Quaternion.identity);
                 mb.For(boot).Cylinder(new Vector3(0f, -leg, 0.01f), 0.04f * H, 0.038f * H, 0.1f * H, 7, Quaternion.identity);
                 mb.For(boot).Box(new Vector3(0f, -leg + 0.02f * H, 0.045f * H), new Vector3(0.07f * H, 0.04f * H, 0.1f * H), Quaternion.identity);
@@ -63,13 +79,13 @@ namespace Kolotopir
             }
             // Torso y ropa (túnica hasta medio muslo)
             rig.Torso = K.Child(rig.Body, "Torso");
-            var tb = new ModelBuilder();
+            var tb = NewMB();
             float w = 0.12f * H * b;
             tb.For(cloth).Lathe(new Vector3(0f, -0.2f * H, 0f), new[]
             {
-                new Vector2(w * 1.2f, 0f), new Vector2(w * 1.05f, 0.12f * H), new Vector2(w * 0.92f, 0.22f * H), new Vector2(w * 1.02f, 0.38f * H),
-                new Vector2(w * 0.95f, 0.47f * H), new Vector2(w * 0.4f, 0.5f * H), new Vector2(0.03f * H, 0.505f * H),
-            }, 10, Quaternion.identity, true, true);
+                new Vector2(w * 1.2f, 0f), new Vector2(w * 1.05f, 0.12f * H), new Vector2(w * 0.92f, 0.22f * H), new Vector2(w * 1.0f, 0.4f * H),
+                new Vector2(w * 0.9f, 0.455f * H), new Vector2(w * 0.62f, 0.49f * H), new Vector2(w * 0.3f, 0.505f * H), new Vector2(0.03f * H, 0.51f * H),
+            }, 12, Quaternion.identity, true, true);
             tb.For(accent).Cylinder(new Vector3(0f, 0.01f * H, 0f), w * 0.97f, w * 0.97f, 0.035f * H, 10, Quaternion.identity);
             tb.For(cloth2).Box(new Vector3(0f, 0.15f * H, w * 0.92f), new Vector3(w * 0.5f, 0.2f * H, 0.01f * H), Quaternion.Euler(-4f, 0f, 0f));
             if (look.Shawl)
@@ -84,23 +100,37 @@ namespace Kolotopir
                 tb.For(MC(new Color(0.36f, 0.25f, 0.16f))).Box(new Vector3(0f, 0.17f * H, w * 0.75f), new Vector3(0.02f * H, 0.3f * H, 0.01f * H), Quaternion.Euler(0f, 0f, 35f));
                 tb.For(MC(Pal.Gold, 0.6f)).Cylinder(new Vector3(0f, 0.25f * H, w * 0.98f), 0.022f * H, 0.022f * H, 0.006f * H, 8, Quaternion.Euler(90f, 0f, 0f));
             }
-            tb.Build(rig.Torso, "Torso");
+            // El tronco es menos profundo que ancho: se aplana sin tocar la cabeza ni los brazos.
+            foreach (var r in tb.Build(rig.Torso, "Torso")) r.transform.localScale = new Vector3(1f, 1f, 0.82f);
 
             float shoulderY = 0.3f * H;
             // Cabeza
             rig.Head = K.Child(rig.Torso, "Cabeza", new Vector3(0f, shoulderY + 0.035f * H, 0f));
-            var hb = new ModelBuilder();
+            var hb = NewMB();
             hb.For(skin).Cylinder(Vector3.zero, 0.028f * H, 0.025f * H, 0.04f * H, 7, Quaternion.identity);
             hb.For(skin).Sphere(new Vector3(0f, headR + 0.03f * H, 0.005f * H), new Vector3(headR * 0.92f, headR * 1.05f, headR * 0.98f), 10, 7, Quaternion.identity);
-            hb.For(skin).Sphere(new Vector3(0f, headR + 0.02f * H, headR * 0.98f), new Vector3(0.012f * H, 0.016f * H, 0.012f * H), 5, 3, Quaternion.identity);
+            // Nariz con puente y punta
+            hb.For(skin).Sphere(new Vector3(0f, headR + 0.024f * H, headR * 0.95f), new Vector3(0.0085f * H, 0.015f * H, 0.011f * H), 7, 5, Quaternion.Euler(-12f, 0f, 0f));
+            hb.For(skin).Sphere(new Vector3(0f, headR + 0.014f * H, headR * 1.0f), new Vector3(0.008f * H, 0.006f * H, 0.007f * H), 6, 4, Quaternion.identity);
             var eye = isNilo ? MC(Pal.NiloEyes, 0.8f) : M(look.Eyes, 0.7f);
             var white = MC(new Color(0.95f, 0.94f, 0.9f), 0.5f);
             foreach (float side in new[] { -1f, 1f })
             {
                 var ep = new Vector3(side * headR * 0.38f, headR + 0.045f * H, headR * 0.84f);
-                hb.For(white).Sphere(ep, Vector3.one * 0.013f * H, 6, 4, Quaternion.identity);
-                hb.For(eye).Sphere(ep + new Vector3(0f, 0f, 0.008f * H), Vector3.one * 0.0085f * H, 6, 4, Quaternion.identity);
+                hb.For(white).Sphere(ep, Vector3.one * 0.0095f * H, 6, 4, Quaternion.identity);
+                hb.For(eye).Sphere(ep + new Vector3(0f, 0f, 0.0055f * H), Vector3.one * 0.0065f * H, 6, 4, Quaternion.identity);
+                // Párpado superior (da expresión y quita el aspecto de muñeco)
+                hb.For(skin).Sphere(ep + new Vector3(0f, 0.003f * H, 0.001f * H), new Vector3(0.0108f * H, 0.0068f * H, 0.0102f * H), 7, 4, Quaternion.Euler(-20f, 0f, 0f));
+                // Cejas
+                hb.For(hair).Box(new Vector3(side * headR * 0.4f, headR + 0.06f * H, headR * 0.87f), new Vector3(0.022f * H, 0.004f * H, 0.008f * H), Quaternion.Euler(0f, side * 16f, -side * 7f));
+                // Orejas
+                hb.For(skin).Sphere(new Vector3(side * headR * 0.93f, headR + 0.034f * H, -headR * 0.05f), new Vector3(0.007f * H, 0.021f * H, 0.014f * H), 7, 5, Quaternion.Euler(0f, side * 12f, 0f));
             }
+            // Boca
+            var lips = SC(K.Mul(K.Hex(look.Skin), 0.78f) * new Color(1f, 0.82f, 0.8f), DetailKind.Skin, 0.35f);
+            hb.For(lips).Box(new Vector3(0f, headR * 0.55f + 0.03f * H, headR * 0.86f), new Vector3(0.026f * H, 0.0048f * H, 0.009f * H), Quaternion.identity);
+            // Barbilla y mandíbula algo marcadas
+            hb.For(skin).Sphere(new Vector3(0f, headR * 0.35f + 0.03f * H, headR * 0.45f), new Vector3(headR * 0.5f, headR * 0.32f, headR * 0.42f), 8, 5, Quaternion.identity);
             // Pelo
             float hy = headR + 0.03f * H;
             switch (look.HairStyle)
@@ -149,12 +179,14 @@ namespace Kolotopir
             hb.Build(rig.Head, "Cabeza");
 
             // Brazos
-            float shoulderX = 0.14f * H * b;
+            float shoulderX = 0.125f * H * b;
             float arm = 0.37f * H;
             foreach (float side in new[] { -1f, 1f })
             {
                 var a = K.Child(rig.Torso, side < 0 ? "BrazoI" : "BrazoD", new Vector3(side * shoulderX, shoulderY - 0.02f * H, 0f));
-                var ab = new ModelBuilder();
+                var ab = NewMB();
+                // Deltoides redondeado: une el brazo con el hombro sin escalón
+                ab.For(cloth).Sphere(new Vector3(0f, -0.014f * H, 0f), new Vector3(0.037f * H * b, 0.044f * H, 0.035f * H * b), 8, 6, Quaternion.identity);
                 ab.For(cloth).Cylinder(new Vector3(0f, -arm * 0.62f, 0f), 0.032f * H * b, 0.04f * H * b, arm * 0.62f, 7, Quaternion.identity);
                 ab.For(skin).Cylinder(new Vector3(0f, -arm * 0.95f, 0f), 0.024f * H, 0.03f * H, arm * 0.36f, 6, Quaternion.identity);
                 ab.For(skin).Sphere(new Vector3(0f, -arm, 0.005f * H), new Vector3(0.03f * H, 0.038f * H, 0.022f * H), 6, 4, Quaternion.identity);
@@ -169,13 +201,13 @@ namespace Kolotopir
             float H = look.Height, b = look.Build;
             float leg = 0.3f * H;
             rig.HipHeight = leg;
-            var skin = M(look.Skin, 0.15f);
-            var skinDark = MC(K.Mul(K.Hex(look.Skin), 0.7f), 0.15f);
-            var pink = MC(new Color(0.85f, 0.6f, 0.58f), 0.2f);
-            var cloth = M(look.Cloth);
-            var cloth2 = M(look.Cloth2);
-            var accent = M(look.Accent);
-            var pants = M(look.Pants);
+            var skin = S(look.Skin, DetailKind.Hide, 0.16f);
+            var skinDark = SC(K.Mul(K.Hex(look.Skin), 0.7f), DetailKind.Hide, 0.16f);
+            var pink = SC(new Color(0.85f, 0.6f, 0.58f), DetailKind.Skin, 0.25f);
+            var cloth = S(look.Cloth, DetailKind.Fabric);
+            var cloth2 = S(look.Cloth2, DetailKind.Fabric);
+            var accent = S(look.Accent, DetailKind.Fabric);
+            var pants = S(look.Pants, DetailKind.Fabric);
             var nail = MC(new Color(0.15f, 0.13f, 0.12f), 0.4f);
 
             rig.Body = K.Child(rig.Root, "Cadera", new Vector3(0f, leg, 0f));
@@ -183,7 +215,7 @@ namespace Kolotopir
             foreach (float side in new[] { -1f, 1f })
             {
                 var l = K.Child(rig.Body, side < 0 ? "PiernaI" : "PiernaD", new Vector3(side * hipW, 0f, 0f));
-                var mb = new ModelBuilder();
+                var mb = NewMB();
                 mb.For(pants).Cylinder(new Vector3(0f, -leg + 0.07f * H, 0f), 0.06f * H * b, 0.07f * H * b, leg - 0.07f * H, 8, Quaternion.identity);
                 mb.For(skinDark).Cylinder(new Vector3(0f, -leg, 0.01f * H), 0.06f * H * b, 0.058f * H * b, 0.08f * H, 8, Quaternion.identity);
                 for (int t = -1; t <= 1; t++)
@@ -192,18 +224,18 @@ namespace Kolotopir
                 if (side < 0) rig.LegL = l; else rig.LegR = l;
             }
             rig.Torso = K.Child(rig.Body, "Torso");
-            var tb = new ModelBuilder();
+            var tb = NewMB();
             float w = 0.17f * H * b;
             // Cuerpo robusto en forma de pera, con túnica hasta las rodillas
             tb.For(cloth).Lathe(new Vector3(0f, -0.16f * H, 0f), new[]
             {
-                new Vector2(w * 1.15f, 0f), new Vector2(w * 1.18f, 0.12f * H), new Vector2(w * 1.12f, 0.27f * H), new Vector2(w * 0.95f, 0.42f * H),
-                new Vector2(w * 0.7f, 0.5f * H), new Vector2(w * 0.35f, 0.53f * H), new Vector2(0.03f * H, 0.535f * H),
-            }, 11, Quaternion.identity, true, true);
+                new Vector2(w * 1.15f, 0f), new Vector2(w * 1.18f, 0.12f * H), new Vector2(w * 1.12f, 0.27f * H), new Vector2(w * 1.0f, 0.4f * H),
+                new Vector2(w * 0.88f, 0.46f * H), new Vector2(w * 0.62f, 0.51f * H), new Vector2(w * 0.32f, 0.535f * H), new Vector2(0.03f * H, 0.54f * H),
+            }, 12, Quaternion.identity, true, true);
             tb.For(accent).Cylinder(new Vector3(0f, 0.04f * H, 0f), w * 1.17f, w * 1.17f, 0.04f * H, 11, Quaternion.identity);
             tb.For(cloth2).Box(new Vector3(0f, 0.12f * H, w * 1.12f), new Vector3(w * 0.45f, 0.26f * H, 0.01f * H), Quaternion.Euler(-8f, 0f, 0f));
             // Bufanda o capa (variante por rol)
-            tb.For(cloth2).Lathe(new Vector3(0f, 0.31f * H, 0f), new[] { new Vector2(w * 1.05f, 0f), new Vector2(w * 0.85f, 0.06f * H), new Vector2(w * 0.45f, 0.08f * H) }, 11, Quaternion.identity, false, false);
+            tb.For(cloth2).Lathe(new Vector3(0f, 0.26f * H, 0f), new[] { new Vector2(w * 1.04f, 0f), new Vector2(w * 0.94f, 0.04f * H), new Vector2(w * 0.68f, 0.085f * H), new Vector2(w * 0.4f, 0.1f * H) }, 12, Quaternion.identity, false, false);
             // Símbolos comunes (rombos) en la ropa
             tb.For(accent).Box(new Vector3(w * 0.5f, 0.2f * H, w * 1.02f), new Vector3(0.04f * H, 0.04f * H, 0.005f * H), Quaternion.Euler(0f, 0f, 45f));
             tb.For(accent).Box(new Vector3(-w * 0.5f, 0.2f * H, w * 1.02f), new Vector3(0.04f * H, 0.04f * H, 0.005f * H), Quaternion.Euler(0f, 0f, 45f));
@@ -216,11 +248,11 @@ namespace Kolotopir
                 for (int i = 0; i < 5; i++)
                     tb.For(MC(i % 2 == 0 ? new Color(0.75f, 0.75f, 0.72f) : new Color(0.78f, 0.6f, 0.3f), 0.6f)).Sphere(new Vector3(-w * 0.7f + i * w * 0.35f, 0.02f * H, -w * 1.42f), Vector3.one * 0.022f * H, 5, 3, Quaternion.identity);
             }
-            tb.Build(rig.Torso, "Torso");
+            foreach (var r in tb.Build(rig.Torso, "Torso")) r.transform.localScale = new Vector3(1f, 1f, 0.85f);
 
             float shoulderY = 0.34f * H;
             rig.Head = K.Child(rig.Torso, "Cabeza", new Vector3(0f, shoulderY + 0.02f * H, 0.02f * H));
-            var hb = new ModelBuilder();
+            var hb = NewMB();
             float hr = 0.095f * H;
             hb.For(skin).Cylinder(Vector3.zero, 0.06f * H, 0.055f * H, 0.05f * H, 8, Quaternion.identity);
             hb.For(skin).Sphere(new Vector3(0f, hr + 0.03f * H, 0f), new Vector3(hr, hr * 0.95f, hr * 1.05f), 10, 7, Quaternion.identity);
@@ -235,28 +267,44 @@ namespace Kolotopir
             hb.Build(rig.Head, "Cabeza");
             // Hocico de tapir: largo, móvil y algo caído
             rig.Snout = K.Child(rig.Head, "Hocico", new Vector3(0f, hr + 0.01f * H, hr * 0.8f));
-            var sb = new ModelBuilder();
-            sb.For(skin).Cylinder(Vector3.zero, 0.055f * H, 0.04f * H, 0.11f * H, 9, Quaternion.Euler(80f, 0f, 0f));
-            sb.For(skin).Cylinder(new Vector3(0f, -0.02f * H, 0.105f * H), 0.04f * H, 0.03f * H, 0.07f * H, 8, Quaternion.Euler(115f, 0f, 0f));
-            sb.For(skinDark).Sphere(new Vector3(0f, -0.05f * H, 0.165f * H), new Vector3(0.032f * H, 0.024f * H, 0.02f * H), 7, 4, Quaternion.identity);
-            sb.For(MC(new Color(0.2f, 0.15f, 0.14f))).Box(new Vector3(0f, -0.045f * H, 0.02f * H), new Vector3(0.06f * H, 0.004f * H, 0.03f * H), Quaternion.Euler(10f, 0f, 0f));
+            var sb = NewMB();
+            // Base ancha que se funde con la cara, tramo cónico y punta redondeada que cae hacia abajo
+            var baseRot = Quaternion.Euler(95f, 0f, 0f);
+            var tipRot = Quaternion.Euler(130f, 0f, 0f);
+            Vector3 joint = baseRot * Vector3.up * 0.15f * H;
+            sb.For(skin).Sphere(new Vector3(0f, 0.005f * H, -0.005f * H), new Vector3(0.062f * H, 0.056f * H, 0.05f * H), 9, 6, Quaternion.identity);
+            sb.For(skin).Lathe(Vector3.zero, new[]
+            {
+                new Vector2(0.058f * H, 0f), new Vector2(0.053f * H, 0.04f * H), new Vector2(0.045f * H, 0.09f * H),
+                new Vector2(0.037f * H, 0.13f * H), new Vector2(0.032f * H, 0.15f * H),
+            }, 12, baseRot, false, false);
+            sb.For(skin).Sphere(joint, Vector3.one * 0.032f * H, 9, 6, Quaternion.identity);
+            sb.For(skin).Lathe(joint, new[]
+            {
+                new Vector2(0.032f * H, 0f), new Vector2(0.029f * H, 0.025f * H), new Vector2(0.022f * H, 0.045f * H),
+                new Vector2(0.012f * H, 0.053f * H), new Vector2(0f, 0.056f * H),
+            }, 12, tipRot, false, false);
+            // Fosas nasales en la punta
+            sb.For(skinDark).Sphere(joint + tipRot * Vector3.up * 0.05f * H, new Vector3(0.022f * H, 0.016f * H, 0.012f * H), 8, 5, Quaternion.Euler(40f, 0f, 0f));
+            sb.For(MC(new Color(0.2f, 0.15f, 0.14f))).Box(new Vector3(0f, -0.052f * H, 0.024f * H), new Vector3(0.05f * H, 0.004f * H, 0.025f * H), Quaternion.Euler(10f, 0f, 0f));
             sb.Build(rig.Snout, "Hocico");
             // Orejas expresivas, rosadas por dentro
             foreach (float side in new[] { -1f, 1f })
             {
                 var e = K.Child(rig.Head, side < 0 ? "OrejaI" : "OrejaD", new Vector3(side * hr * 0.75f, hr * 1.7f + 0.03f * H, -hr * 0.1f));
-                var eb = new ModelBuilder();
+                var eb = NewMB();
                 eb.For(skin).Sphere(new Vector3(side * 0.02f * H, 0.035f * H, 0f), new Vector3(0.035f * H, 0.05f * H, 0.014f * H), 7, 5, Quaternion.Euler(0f, 0f, -side * 25f));
                 eb.For(pink).Sphere(new Vector3(side * 0.02f * H, 0.035f * H, 0.009f * H), new Vector3(0.025f * H, 0.038f * H, 0.006f * H), 7, 5, Quaternion.Euler(0f, 0f, -side * 25f));
                 eb.Build(e, "Oreja");
                 if (side < 0) rig.EarL = e; else rig.EarR = e;
             }
-            float shoulderX = 0.2f * H * b;
+            float shoulderX = 0.17f * H * b;
             float arm = 0.33f * H;
             foreach (float side in new[] { -1f, 1f })
             {
                 var a = K.Child(rig.Torso, side < 0 ? "BrazoI" : "BrazoD", new Vector3(side * shoulderX, shoulderY - 0.04f * H, 0f));
-                var ab = new ModelBuilder();
+                var ab = NewMB();
+                ab.For(cloth).Sphere(new Vector3(0f, -0.015f * H, 0f), new Vector3(0.066f * H * b, 0.07f * H, 0.062f * H * b), 9, 6, Quaternion.identity);
                 ab.For(cloth).Cylinder(new Vector3(0f, -arm * 0.6f, 0f), 0.05f * H * b, 0.06f * H * b, arm * 0.6f, 8, Quaternion.identity);
                 ab.For(skin).Cylinder(new Vector3(0f, -arm * 0.95f, 0f), 0.04f * H * b, 0.048f * H * b, arm * 0.38f, 7, Quaternion.identity);
                 ab.For(skinDark).Sphere(new Vector3(0f, -arm, 0.01f * H), new Vector3(0.05f * H, 0.05f * H, 0.04f * H), 7, 5, Quaternion.identity);
@@ -273,7 +321,7 @@ namespace Kolotopir
             {
                 // Bastón con orbe luminoso (ancianos, guardianes de recuerdos)
                 rig.Prop = K.Child(rig.ArmR, "Baston", new Vector3(0f, -arm, 0.03f * H));
-                var pb = new ModelBuilder();
+                var pb = NewMB();
                 pb.For(MC(new Color(0.42f, 0.3f, 0.2f))).Cylinder(new Vector3(0f, -0.45f * H, 0f), 0.014f * H, 0.012f * H, 1.05f * H, 6, Quaternion.identity);
                 pb.For(MC(new Color(0.42f, 0.3f, 0.2f))).Lathe(new Vector3(0f, 0.6f * H, 0f), new[] { new Vector2(0.05f * H, 0f), new Vector2(0.06f * H, 0.05f * H), new Vector2(0.05f * H, 0.1f * H) }, 8, Quaternion.identity, false, false);
                 pb.For(MaterialLibrary.Emissive(Pal.Warm, Pal.Warm, 1.3f)).Sphere(new Vector3(0f, 0.65f * H, 0f), Vector3.one * 0.03f * H, 8, 5, Quaternion.identity);
@@ -282,14 +330,14 @@ namespace Kolotopir
             if (look.Basket)
             {
                 var basket = K.Child(rig.ArmL, "Cesta", new Vector3(0f, -arm * 0.85f, 0.06f * H));
-                var bb = new ModelBuilder();
+                var bb = NewMB();
                 Props.Basket(bb, Vector3.zero, new Color(0.45f, 0.62f, 0.3f));
                 bb.Build(basket, "Cesta", false);
                 basket.localScale = Vector3.one * (H / 1.7f);
             }
             if (look.Hat && rig.Species == Species.Kolotapir)
             {
-                var hat = new ModelBuilder();
+                var hat = NewMB();
                 float hr = 0.095f * H;
                 hat.For(MC(new Color(0.52f, 0.4f, 0.28f))).Cylinder(new Vector3(0f, hr * 1.75f + 0.03f * H, -hr * 0.1f), hr * 1.7f, hr * 1.6f, hr * 0.12f, 12, Quaternion.identity);
                 hat.For(MC(new Color(0.52f, 0.4f, 0.28f))).Cylinder(new Vector3(0f, hr * 1.85f + 0.03f * H, -hr * 0.1f), hr * 0.85f, hr * 0.7f, hr * 0.7f, 10, Quaternion.identity);

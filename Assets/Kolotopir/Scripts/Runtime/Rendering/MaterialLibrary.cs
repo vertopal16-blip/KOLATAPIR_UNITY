@@ -11,7 +11,7 @@ namespace Kolotopir
     /// </summary>
     public static class MaterialLibrary
     {
-        private static Material _lit, _litTransparent, _unlit, _unlitTransparent, _particleAdd, _particleAlpha;
+        private static Material _lit, _litTransparent, _unlit, _unlitTransparent, _particleAdd, _particleAlpha, _litDetail, _litCutout, _terrain;
         private static readonly Dictionary<string, Material> Cache = new Dictionary<string, Material>();
         public static bool IsUrp { get; private set; }
 
@@ -25,6 +25,12 @@ namespace Kolotopir
             _unlitTransparent = Template("UnlitTransparent", IsUrp ? "Universal Render Pipeline/Unlit" : "Sprites/Default", true, false);
             _particleAdd = Template("ParticlesAdditive", IsUrp ? "Universal Render Pipeline/Particles/Unlit" : "Legacy Shaders/Particles/Additive", true, true);
             _particleAlpha = Template("ParticlesAlpha", IsUrp ? "Universal Render Pipeline/Particles/Unlit" : "Sprites/Default", true, false);
+            // Variantes con mapa de normales y con recorte alfa (hojas, hierba). Las plantillas del configurador
+            // garantizan que estas variantes del shader se incluyan en las compilaciones.
+            _litDetail = Template("LitDetail", IsUrp ? "Universal Render Pipeline/Lit" : "Standard", false, false);
+            _litDetail.EnableKeyword("_NORMALMAP");
+            _litCutout = Template("LitCutout", IsUrp ? "Universal Render Pipeline/Lit" : "Standard", false, false);
+            ConfigureCutout(_litCutout, 0.45f);
         }
 
         private static Material Template(string resource, string shaderName, bool transparent, bool additive)
@@ -84,6 +90,34 @@ namespace Kolotopir
             }
         }
 
+        /// <summary>Recorte alfa: las zonas transparentes de la textura (hojas, briznas) no se dibujan ni proyectan sombra.</summary>
+        public static void ConfigureCutout(Material m, float cutoff)
+        {
+            if (m.HasProperty("_Cutoff")) m.SetFloat("_Cutoff", cutoff);
+            if (m.HasProperty("_AlphaClip")) m.SetFloat("_AlphaClip", 1f);
+            if (m.HasProperty("_Mode")) m.SetFloat("_Mode", 1f);
+            if (m.HasProperty("_Surface")) m.SetFloat("_Surface", 0f);
+            m.EnableKeyword("_ALPHATEST_ON");
+            m.SetOverrideTag("RenderType", "TransparentCutout");
+            m.renderQueue = (int)RenderQueue.AlphaTest;
+        }
+
+        /// <summary>Mapa de normales (relieve) con su intensidad.</summary>
+        public static void SetNormal(Material m, Texture normal, float scale)
+        {
+            if (normal == null || !m.HasProperty("_BumpMap")) return;
+            m.SetTexture("_BumpMap", normal);
+            if (m.HasProperty("_BumpScale")) m.SetFloat("_BumpScale", scale);
+            m.EnableKeyword("_NORMALMAP");
+        }
+
+        public static void SetTiling(Material m, float metersPerTile)
+        {
+            var scale = Vector2.one / Mathf.Max(0.01f, metersPerTile);
+            if (m.HasProperty("_BaseMap")) m.SetTextureScale("_BaseMap", scale);
+            if (m.HasProperty("_MainTex")) m.SetTextureScale("_MainTex", scale);
+        }
+
         public static void SetColor(Material m, Color c)
         {
             if (m.HasProperty("_BaseColor")) m.SetColor("_BaseColor", c);
@@ -120,6 +154,115 @@ namespace Kolotopir
         private static string Key(string kind, Color c, float a = 0f, float b = 0f)
         {
             return kind + ColorUtility.ToHtmlStringRGBA(c) + "_" + a.ToString("0.00") + "_" + b.ToString("0.00");
+        }
+
+        /// <summary>
+        /// Material con textura de detalle y relieve (madera, piedra, paja, tela...). El color se multiplica por la
+        /// textura en escala de grises, compensando su oscurecimiento medio. Las UV del <see cref="MeshBuilder"/> van en metros.
+        /// </summary>
+        public static Material Surface(DetailKind kind, Color c, float smoothness = 0.12f, float metallic = 0f)
+        {
+            Init();
+            string key = Key("s" + (int)kind, c, smoothness, metallic);
+            if (Cache.TryGetValue(key, out var m) && m != null) return m;
+            var d = SurfaceTextures.Get(kind);
+            if (d == null) return Lit(c, smoothness, metallic);
+            m = new Material(_litDetail) { name = kind + "_" + ColorUtility.ToHtmlStringRGB(c) };
+            var tint = c * d.Compensation;
+            tint.a = c.a;
+            SetColor(m, tint);
+            SetSurface(m, smoothness, metallic);
+            SetTexture(m, d.Albedo);
+            SetNormal(m, d.Normal, 1f);
+            SetTiling(m, d.Tile);
+            m.enableInstancing = true;
+            Cache[key] = m;
+            return m;
+        }
+
+        /// <summary>Material con textura de detalle no compartido (para criaturas que parpadean al recibir golpes).</summary>
+        public static Material SurfaceInstance(DetailKind kind, Color c, float smoothness = 0.12f)
+        {
+            Init();
+            var d = SurfaceTextures.Get(kind);
+            if (d == null) return LitInstance(c, smoothness);
+            var m = new Material(_litDetail) { name = kind + "_Instancia" };
+            var tint = c * d.Compensation;
+            tint.a = c.a;
+            SetColor(m, tint);
+            SetSurface(m, smoothness, 0f);
+            SetTexture(m, d.Albedo);
+            SetNormal(m, d.Normal, 1f);
+            SetTiling(m, d.Tile);
+            return m;
+        }
+
+        /// <summary>
+        /// Material para el mundo construido (edificios, atrezo, vegetación): elige una superficie según el color
+        /// (madera, piedra, paja, tejas, corteza, follaje...). Los acabados pulidos o metálicos quedan lisos.
+        /// </summary>
+        public static Material World(Color c, float smoothness = 0.12f, float metallic = 0f)
+        {
+            if (metallic > 0.3f || smoothness >= 0.45f) return Lit(c, smoothness, metallic);
+            var kind = Classify(c);
+            return kind.HasValue ? Surface(kind.Value, c, smoothness, metallic) : Lit(c, smoothness, metallic);
+        }
+
+        private static bool Same(Color a, Color b) => Mathf.Abs(a.r - b.r) < 0.002f && Mathf.Abs(a.g - b.g) < 0.002f && Mathf.Abs(a.b - b.b) < 0.002f;
+
+        public static DetailKind? Classify(Color c)
+        {
+            if (Same(c, Pal.Roof) || Same(c, Pal.RoofDark)) return DetailKind.Tiles;
+            if (Same(c, Pal.Thatch)) return DetailKind.Thatch;
+            if (Same(c, Pal.Bark)) return DetailKind.Bark;
+            if (Same(c, Pal.Cloth) || Same(c, Pal.Rope)) return DetailKind.Fabric;
+            Color.RGBToHSV(c, out float h, out float s, out float v);
+            h *= 360f;
+            if (v < 0.08f) return DetailKind.Generic;
+            if (s < 0.14f) return v > 0.78f ? DetailKind.Plaster : DetailKind.Stone;
+            if (h >= 55f && h <= 175f && s > 0.18f) return DetailKind.Foliage;
+            if (h >= 15f && h < 55f)
+            {
+                if (s < 0.3f) return v > 0.72f ? DetailKind.Plaster : DetailKind.Stone;
+                if (v >= 0.7f) return DetailKind.Thatch;
+                return DetailKind.Wood;
+            }
+            return DetailKind.Generic;
+        }
+
+        /// <summary>Hojas, hierba y flores: textura con recorte alfa, compartida por textura y color.</summary>
+        public static Material Cutout(Texture tex, Color tint, float smoothness = 0.08f, float cutoff = 0.45f)
+        {
+            Init();
+            string key = Key("cut" + (tex != null ? tex.GetInstanceID() : 0), tint, smoothness, cutoff);
+            if (Cache.TryGetValue(key, out var m) && m != null) return m;
+            m = new Material(_litCutout) { name = "Recorte_" + ColorUtility.ToHtmlStringRGB(tint) };
+            ConfigureCutout(m, cutoff);
+            SetTexture(m, tex);
+            SetColor(m, tint);
+            SetSurface(m, smoothness, 0f);
+            if (m.HasProperty("_SpecularHighlights")) m.SetFloat("_SpecularHighlights", 0f);
+            m.enableInstancing = true;
+            Cache[key] = m;
+            return m;
+        }
+
+        /// <summary>Material del terreno con mapas de normales activados (las capas aportan el relieve).</summary>
+        public static Material TerrainMaterial()
+        {
+            Init();
+            if (_terrain != null) return _terrain;
+            var res = IsUrp ? Resources.Load<Material>("KolotopirMaterials/TerrainLit") : null;
+            if (res != null && res.shader != null && res.shader.isSupported) _terrain = new Material(res);
+            else
+            {
+                var sh = Shader.Find(IsUrp ? "Universal Render Pipeline/Terrain/Lit" : "Nature/Terrain/Standard");
+                if (sh == null) return null;
+                _terrain = new Material(sh);
+            }
+            _terrain.name = "Kolotopir_Terreno";
+            _terrain.EnableKeyword("_NORMALMAP");
+            return _terrain;
         }
 
         /// <summary>Material opaco iluminado (compartido por color).</summary>

@@ -85,6 +85,7 @@ Otros comandos del menú **KOLOTOPIR**: abrir la escena principal, borrar las pa
 - **Paisaje sonoro por región**, firma sonora de las Resonancias, voces inventadas de humanos y kolotapires, y música usada con moderación.
 - **Accesibilidad** (sección 18): tamaño de texto y de subtítulos, fondo de subtítulos, **señales visuales de sonido**, reducción del movimiento de cámara, sensibilidad e inversión del ratón, **controles reasignables**, **pistas graduales**, reducción de destellos y alto contraste.
 - **Streaming por sectores de 250 m** con terreno de Unity por sector, versión lejana de baja resolución, vegetación instanciada y estado persistente.
+- **Aspecto natural sin recursos externos**: `Runtime/Rendering/SurfaceTextures.cs` genera al arrancar (en varios hilos) texturas y mapas de relieve que se repiten sin costuras para el terreno (hierba, pradera, tierra y roca), la piedra, el enlucido, la madera, la paja, las tejas, la corteza, la tela, la piel y el pelo, además de tarjetas recortadas de hojas, acículas, hierba y flores. Los modelos usan normales suavizadas, copas de árbol hechas con cientos de hojas, rocas irregulares y personajes con rasgos faciales y hombros naturales; URP añade oclusión ambiental (SSAO) y cuatro cascadas de sombra.
 
 ---
 

@@ -78,11 +78,14 @@ namespace Kolotopir
 
             _layers = new[]
             {
-                Layer(TextureGen.GroundKind.Hierba, 9f),
-                Layer(TextureGen.GroundKind.Pradera, 11f),
-                Layer(TextureGen.GroundKind.Tierra, 6f),
-                Layer(TextureGen.GroundKind.Roca, 12f),
+                Layer(TextureGen.GroundKind.Hierba, 5.5f),
+                Layer(TextureGen.GroundKind.Pradera, 6.5f),
+                Layer(TextureGen.GroundKind.Tierra, 4f),
+                Layer(TextureGen.GroundKind.Roca, 9f),
             };
+            // Los colores lejanos se toman de las texturas detalladas para que no haya saltos de tono al acercarse.
+            for (int i = 0; i < 4; i++)
+                if (SurfaceTextures.GroundAlbedo[i] != null) LayerColors[i] = SurfaceTextures.GroundAverage[i];
             yield return null;
 
             // Datos lejanos (alturas y colores) en segundo plano: la función del terreno es pura.
@@ -110,13 +113,20 @@ namespace Kolotopir
 
         private static TerrainLayer Layer(TextureGen.GroundKind kind, float tile)
         {
+            int i = (int)kind;
+            bool detailed = SurfaceTextures.GroundAlbedo[i] != null;
             var l = new TerrainLayer
             {
-                diffuseTexture = TextureGen.Ground(kind),
+                diffuseTexture = detailed ? SurfaceTextures.GroundAlbedo[i] : TextureGen.Ground(kind),
                 tileSize = new Vector2(tile, tile),
-                smoothness = kind == TextureGen.GroundKind.Roca ? 0.15f : 0.05f,
+                smoothness = kind == TextureGen.GroundKind.Roca ? 0.18f : kind == TextureGen.GroundKind.Tierra ? 0.08f : 0.04f,
                 metallic = 0f,
             };
+            if (detailed)
+            {
+                l.normalMapTexture = SurfaceTextures.GroundNormal[i];
+                l.normalScale = kind == TextureGen.GroundKind.Roca ? 1.2f : 1f;
+            }
             l.name = "Capa_" + kind;
             return l;
         }

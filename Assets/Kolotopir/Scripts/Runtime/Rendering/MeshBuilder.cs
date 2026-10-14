@@ -5,8 +5,9 @@ using UnityEngine.Rendering;
 namespace Kolotopir
 {
     /// <summary>
-    /// Constructor de mallas low-poly con sombreado plano. Todas las primitivas aceptan una matriz de
-    /// transformación y orientan sus caras automáticamente hacia fuera (robusto ante errores de orden).
+    /// Constructor de mallas procedurales. Todas las primitivas aceptan una matriz de transformación y orientan
+    /// sus caras automáticamente hacia fuera (robusto ante errores de orden). Genera UV proyectadas en metros
+    /// (para texturas de detalle), sombreado suave opcional por ángulo y tangentes para los mapas de relieve.
     /// </summary>
     public sealed class MeshBuilder
     {
@@ -16,6 +17,10 @@ namespace Kolotopir
         public readonly List<int> Triangles = new List<int>();
 
         public Matrix4x4 Matrix = Matrix4x4.identity;
+        /// <summary>Multiplicador de segmentos de cilindros, esferas y tornos (más detalle en personajes).</summary>
+        public float Detail = 1f;
+        /// <summary>Hay normales personalizadas (tarjetas de hojas o hierba): no se suavizan.</summary>
+        public bool CustomNormals { get; private set; }
         public int VertexCount => Vertices.Count;
         public bool IsEmpty => Triangles.Count == 0;
 
@@ -41,11 +46,36 @@ namespace Kolotopir
             int i = Vertices.Count;
             Vertices.Add(wa); Vertices.Add(wb); Vertices.Add(wc);
             Normals.Add(n); Normals.Add(n); Normals.Add(n);
-            Uvs.Add(new Vector2(wa.x + wa.y, wa.z + wa.y) * 0.25f);
-            Uvs.Add(new Vector2(wb.x + wb.y, wb.z + wb.y) * 0.25f);
-            Uvs.Add(new Vector2(wc.x + wc.y, wc.z + wc.y) * 0.25f);
+            // Proyección "de caja" en metros según el eje dominante de la cara: las texturas no se estiran.
+            float ax = Mathf.Abs(n.x), ay = Mathf.Abs(n.y), az = Mathf.Abs(n.z);
+            if (ay >= ax && ay >= az) { Uvs.Add(new Vector2(wa.x, wa.z)); Uvs.Add(new Vector2(wb.x, wb.z)); Uvs.Add(new Vector2(wc.x, wc.z)); }
+            else if (ax >= az) { Uvs.Add(new Vector2(wa.z, wa.y)); Uvs.Add(new Vector2(wb.z, wb.y)); Uvs.Add(new Vector2(wc.z, wc.y)); }
+            else { Uvs.Add(new Vector2(wa.x, wa.y)); Uvs.Add(new Vector2(wb.x, wb.y)); Uvs.Add(new Vector2(wc.x, wc.y)); }
             Triangles.Add(i); Triangles.Add(i + 1); Triangles.Add(i + 2);
         }
+
+        /// <summary>
+        /// Tarjeta (cuadrilátero) con UV de 0 a 1 y normales indicadas por vértice: hojas, hierba, flores.
+        /// Si es de doble cara se añade la cara trasera con el mismo sombreado (no necesita desactivar el culling).
+        /// </summary>
+        public void Card(Vector3 a, Vector3 b, Vector3 c, Vector3 d, Vector3 na, Vector3 nb, Vector3 nc, Vector3 nd, bool doubleSided = true)
+        {
+            CustomNormals = true;
+            Vector3 wa = T(a), wb = T(b), wc = T(c), wd = T(d);
+            Vector3 n0 = Matrix.MultiplyVector(na).normalized, n1 = Matrix.MultiplyVector(nb).normalized;
+            Vector3 n2 = Matrix.MultiplyVector(nc).normalized, n3 = Matrix.MultiplyVector(nd).normalized;
+            for (int side = 0; side < (doubleSided ? 2 : 1); side++)
+            {
+                int i = Vertices.Count;
+                Vertices.Add(wa); Vertices.Add(wb); Vertices.Add(wc); Vertices.Add(wd);
+                Normals.Add(n0); Normals.Add(n1); Normals.Add(n2); Normals.Add(n3);
+                Uvs.Add(new Vector2(0f, 0f)); Uvs.Add(new Vector2(1f, 0f)); Uvs.Add(new Vector2(1f, 1f)); Uvs.Add(new Vector2(0f, 1f));
+                if (side == 0) { Triangles.Add(i); Triangles.Add(i + 2); Triangles.Add(i + 1); Triangles.Add(i); Triangles.Add(i + 3); Triangles.Add(i + 2); }
+                else { Triangles.Add(i); Triangles.Add(i + 1); Triangles.Add(i + 2); Triangles.Add(i); Triangles.Add(i + 2); Triangles.Add(i + 3); }
+            }
+        }
+
+        private int Seg(int n, int min) => Mathf.Max(min, Mathf.RoundToInt(n * Detail));
 
         public void Quad(Vector3 a, Vector3 b, Vector3 c, Vector3 d, Vector3 outward)
         {
@@ -93,7 +123,7 @@ namespace Kolotopir
         /// <summary>Cilindro o tronco de cono a lo largo del eje local Y (base en <paramref name="baseCenter"/>).</summary>
         public void Cylinder(Vector3 baseCenter, float rBottom, float rTop, float height, int segments, Quaternion rot, bool capBottom = true, bool capTop = true)
         {
-            segments = Mathf.Max(3, segments);
+            segments = Seg(segments, 3);
             Vector3 up = rot * Vector3.up;
             Vector3 top = baseCenter + up * height;
             for (int i = 0; i < segments; i++)
@@ -119,7 +149,7 @@ namespace Kolotopir
         /// <summary>Superficie de revolución: perfil de (radio, altura) alrededor del eje local Y.</summary>
         public void Lathe(Vector3 baseCenter, Vector2[] profile, int segments, Quaternion rot, bool capBottom = true, bool capTop = true)
         {
-            segments = Mathf.Max(3, segments);
+            segments = Seg(segments, 3);
             Vector3 up = rot * Vector3.up;
             for (int i = 0; i < segments; i++)
             {
@@ -151,7 +181,7 @@ namespace Kolotopir
         /// <summary>Esfera (o elipsoide) low-poly.</summary>
         public void Sphere(Vector3 center, Vector3 radii, int lon, int lat, Quaternion rot)
         {
-            lon = Mathf.Max(4, lon); lat = Mathf.Max(3, lat);
+            lon = Seg(lon, 4); lat = Seg(lat, 3);
             for (int j = 0; j < lat; j++)
             {
                 float t0 = Mathf.PI * j / lat, t1 = Mathf.PI * (j + 1) / lat;
@@ -224,6 +254,54 @@ namespace Kolotopir
             }
         }
 
+        /// <summary>
+        /// Roca natural: icosaedro subdividido dos veces, recortado por planos al azar (caras de fractura),
+        /// con la base aplanada para asentarse en el suelo y una ligera irregularidad.
+        /// </summary>
+        public void Boulder(Vector3 center, Vector3 size, Quaternion rot, int seed)
+        {
+            var rng = new Kolotopir.Core.OromRandom(seed);
+            var verts = new List<Vector3>(IcoVerts);
+            var tris = new List<int>(IcoTris);
+            for (int level = 0; level < 2; level++)
+            {
+                var mid = new Dictionary<long, int>();
+                var newTris = new List<int>();
+                for (int i = 0; i < tris.Count; i += 3)
+                {
+                    int a = tris[i], b = tris[i + 1], c = tris[i + 2];
+                    int ab = Mid(verts, mid, a, b), bc = Mid(verts, mid, b, c), ca = Mid(verts, mid, c, a);
+                    newTris.AddRange(new[] { a, ab, ca, b, bc, ab, c, ca, bc, ab, bc, ca });
+                }
+                tris = newTris;
+            }
+            int cuts = 5 + rng.Range(0, 4);
+            var planes = new Vector4[cuts];
+            for (int k = 0; k < cuts; k++)
+            {
+                var n = new Vector3(rng.Range(-1f, 1f), rng.Range(-0.3f, 1f), rng.Range(-1f, 1f)).normalized;
+                planes[k] = new Vector4(n.x, n.y, n.z, rng.Range(0.62f, 0.85f));
+            }
+            for (int i = 0; i < verts.Count; i++)
+            {
+                var v = verts[i] * (1f + (rng.Value() - 0.5f) * 0.08f);
+                for (int k = 0; k < cuts; k++)
+                {
+                    var n = new Vector3(planes[k].x, planes[k].y, planes[k].z);
+                    float d = Vector3.Dot(v, n);
+                    if (d > planes[k].w) v -= n * (d - planes[k].w) * 0.9f;
+                }
+                if (v.y < -0.35f) v.y = -0.35f + (v.y + 0.35f) * 0.25f;
+                verts[i] = v;
+            }
+            for (int i = 0; i < tris.Count; i += 3)
+            {
+                Vector3 a = Scale(verts[tris[i]], size), b = Scale(verts[tris[i + 1]], size), c = Scale(verts[tris[i + 2]], size);
+                Vector3 m = (a + b + c) / 3f;
+                Tri(center + rot * a, center + rot * b, center + rot * c, rot * m);
+            }
+        }
+
         private static Vector3 Scale(Vector3 v, Vector3 s) => new Vector3(v.x * s.x * 0.5f, v.y * s.y * 0.5f, v.z * s.z * 0.5f);
 
         private static int Mid(List<Vector3> verts, Dictionary<long, int> cache, int a, int b)
@@ -248,6 +326,58 @@ namespace Kolotopir
             for (int i = 0; i < other.Triangles.Count; i++) Triangles.Add(baseIndex + other.Triangles[i]);
         }
 
+        /// <summary>
+        /// Sombreado suave por ángulo: en cada posición se promedian las normales de las caras que forman un ángulo
+        /// menor que el indicado (las aristas vivas se conservan). Los vértices siguen siendo propios de cada cara,
+        /// así que las UV proyectadas no se alteran.
+        /// </summary>
+        public void Smooth(float angleDeg)
+        {
+            if (angleDeg <= 0f || CustomNormals || Vertices.Count == 0) return;
+            float cos = Mathf.Cos(angleDeg * Mathf.Deg2Rad);
+            int triCount = Triangles.Count / 3;
+            var faceN = new Vector3[triCount];
+            var faceU = new Vector3[triCount];
+            var vertTri = new int[Vertices.Count];
+            for (int t = 0; t < triCount; t++)
+            {
+                int ia = Triangles[t * 3], ib = Triangles[t * 3 + 1], ic = Triangles[t * 3 + 2];
+                var n = Vector3.Cross(Vertices[ib] - Vertices[ia], Vertices[ic] - Vertices[ia]);
+                faceN[t] = n;
+                faceU[t] = n.sqrMagnitude > 1e-14f ? n.normalized : Normals[ia];
+                vertTri[ia] = t; vertTri[ib] = t; vertTri[ic] = t;
+            }
+            var groups = new Dictionary<long, List<int>>(Vertices.Count / 4);
+            for (int i = 0; i < Vertices.Count; i++)
+            {
+                long key = PosKey(Vertices[i]);
+                if (!groups.TryGetValue(key, out var list)) { list = new List<int>(6); groups[key] = list; }
+                list.Add(i);
+            }
+            foreach (var list in groups.Values)
+            {
+                if (list.Count == 1) continue;
+                for (int a = 0; a < list.Count; a++)
+                {
+                    int va = list[a];
+                    var fa = faceU[vertTri[va]];
+                    Vector3 sum = Vector3.zero;
+                    for (int b = 0; b < list.Count; b++)
+                    {
+                        int tb = vertTri[list[b]];
+                        if (Vector3.Dot(fa, faceU[tb]) >= cos) sum += faceN[tb];
+                    }
+                    if (sum.sqrMagnitude > 1e-14f) Normals[va] = sum.normalized;
+                }
+            }
+        }
+
+        private static long PosKey(Vector3 p)
+        {
+            long x = (long)Mathf.Round(p.x * 1000f) + 1048576, y = (long)Mathf.Round(p.y * 1000f) + 1048576, z = (long)Mathf.Round(p.z * 1000f) + 1048576;
+            return ((x & 0x1FFFFF) << 42) | ((y & 0x1FFFFF) << 21) | (z & 0x1FFFFF);
+        }
+
         public Mesh ToMesh(string name = "Kolotopir")
         {
             var mesh = new Mesh { name = name };
@@ -257,6 +387,8 @@ namespace Kolotopir
             mesh.SetUVs(0, Uvs);
             mesh.SetTriangles(Triangles, 0);
             mesh.RecalculateBounds();
+            // Tangentes para los mapas de relieve (las UV ya están proyectadas en metros).
+            if (Triangles.Count > 0) mesh.RecalculateTangents();
             return mesh;
         }
     }
@@ -269,6 +401,10 @@ namespace Kolotopir
     {
         private readonly Dictionary<Material, MeshBuilder> _parts = new Dictionary<Material, MeshBuilder>();
         private readonly List<Material> _order = new List<Material>();
+        /// <summary>Ángulo de suavizado de normales (0 = facetado, para arquitectura; 40–75 para formas orgánicas).</summary>
+        public float SmoothAngle;
+        /// <summary>Multiplicador de segmentos de las primitivas redondas.</summary>
+        public float Detail = 1f;
 
         public MeshBuilder this[Material m] => For(m);
 
@@ -276,14 +412,15 @@ namespace Kolotopir
         {
             if (!_parts.TryGetValue(m, out var b))
             {
-                b = new MeshBuilder();
+                b = new MeshBuilder { Detail = Detail };
                 _parts[m] = b;
                 _order.Add(m);
             }
             return b;
         }
 
-        public MeshBuilder For(Color c, float smoothness = 0.12f) => For(MaterialLibrary.Lit(c, smoothness));
+        /// <summary>Material del mundo según el color (madera, piedra, paja...), con textura de detalle.</summary>
+        public MeshBuilder For(Color c, float smoothness = 0.12f) => For(MaterialLibrary.World(c, smoothness));
 
         public bool IsEmpty
         {
@@ -303,6 +440,7 @@ namespace Kolotopir
                 if (b.IsEmpty) continue;
                 var go = new GameObject(name + "_" + mat.name);
                 go.transform.SetParent(parent, false);
+                b.Smooth(SmoothAngle);
                 go.AddComponent<MeshFilter>().sharedMesh = b.ToMesh(name);
                 var mr = go.AddComponent<MeshRenderer>();
                 mr.sharedMaterial = mat;

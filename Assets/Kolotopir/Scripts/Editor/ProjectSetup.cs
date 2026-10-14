@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Reflection;
 using Kolotopir.Core;
 using UnityEditor;
 using UnityEditor.SceneManagement;
@@ -108,12 +110,13 @@ namespace Kolotopir.EditorTools
                 asset.supportsHDR = true;
                 asset.renderScale = 1f;
                 asset.shadowDistance = 140f;
-                asset.shadowCascadeCount = 2;
+                asset.shadowCascadeCount = 4;
                 asset.msaaSampleCount = 4;
                 asset.maxAdditionalLightsCount = 8;
                 AssetDatabase.CreateAsset(asset, PipelinePath);
                 report.AppendLine("• Creado el asset de URP: " + PipelinePath);
             }
+            EnsureAmbientOcclusion(report);
             if (GraphicsSettings.defaultRenderPipeline != asset)
             {
                 if (GraphicsSettings.defaultRenderPipeline == null || force)
@@ -136,6 +139,42 @@ namespace Kolotopir.EditorTools
 #endif
         }
 
+#if KOLO_URP
+        /// <summary>
+        /// Oclusión ambiental en pantalla (SSAO): oscurece rincones, bases de árboles y uniones con el suelo,
+        /// lo que da mucha más sensación de volumen. Se añade por reflexión porque la clase no es pública en todas las versiones.
+        /// </summary>
+        private static void EnsureAmbientOcclusion(System.Text.StringBuilder report)
+        {
+            try
+            {
+                var data = AssetDatabase.LoadAssetAtPath<UniversalRendererData>(RendererPath);
+                if (data == null) return;
+                foreach (var f in data.rendererFeatures)
+                    if (f != null && f.GetType().Name == "ScreenSpaceAmbientOcclusion") return;
+                var type = typeof(UniversalRendererData).Assembly.GetType("UnityEngine.Rendering.Universal.ScreenSpaceAmbientOcclusion");
+                if (type == null) return;
+                var feature = ScriptableObject.CreateInstance(type) as ScriptableRendererFeature;
+                if (feature == null) return;
+                feature.name = "OclusionAmbiental";
+                AssetDatabase.AddObjectToAsset(feature, data);
+                data.rendererFeatures.Add(feature);
+                if (AssetDatabase.TryGetGUIDAndLocalFileIdentifier(feature, out string _, out long localId))
+                {
+                    var mapField = typeof(ScriptableRendererData).GetField("m_RendererFeatureMap", BindingFlags.NonPublic | BindingFlags.Instance);
+                    if (mapField != null && mapField.GetValue(data) is List<long> map) map.Add(localId);
+                }
+                data.SetDirty();
+                EditorUtility.SetDirty(data);
+                report.AppendLine("• Añadida la oclusión ambiental (SSAO).");
+            }
+            catch (Exception e)
+            {
+                Debug.LogWarning("KOLOTOPIR: no se pudo añadir la oclusión ambiental: " + e.Message);
+            }
+        }
+#endif
+
         // ------------------------------------------------------------------ Materiales
 
         private static void EnsureMaterials(System.Text.StringBuilder report)
@@ -144,17 +183,23 @@ namespace Kolotopir.EditorTools
             Directory.CreateDirectory(MaterialsDir);
             int created = 0;
             created += MakeMaterial("Lit", "Universal Render Pipeline/Lit", false, false);
+            created += MakeMaterial("LitDetail", "Universal Render Pipeline/Lit", false, false, m => m.EnableKeyword("_NORMALMAP"));
+            created += MakeMaterial("LitCutout", "Universal Render Pipeline/Lit", false, false, m => MaterialLibrary.ConfigureCutout(m, 0.45f));
+            created += MakeMaterial("LitTransparentDetail", "Universal Render Pipeline/Lit", true, false, m => m.EnableKeyword("_NORMALMAP"));
             created += MakeMaterial("LitTransparent", "Universal Render Pipeline/Lit", true, false);
             created += MakeMaterial("Unlit", "Universal Render Pipeline/Unlit", false, false);
             created += MakeMaterial("UnlitTransparent", "Universal Render Pipeline/Unlit", true, false);
             created += MakeMaterial("ParticlesAdditive", "Universal Render Pipeline/Particles/Unlit", true, true);
             created += MakeMaterial("ParticlesAlpha", "Universal Render Pipeline/Particles/Unlit", true, false);
             created += MakeMaterial("SimpleLit", "Universal Render Pipeline/Simple Lit", false, false);
-            created += MakeMaterial("TerrainLit", "Universal Render Pipeline/Terrain/Lit", false, false);
+            created += MakeMaterial("TerrainLit", "Universal Render Pipeline/Terrain/Lit", false, false, m => m.EnableKeyword("_NORMALMAP"));
+            // Plantillas creadas por versiones anteriores del configurador: activar el relieve del terreno.
+            var terrain = AssetDatabase.LoadAssetAtPath<Material>(MaterialsDir + "/TerrainLit.mat");
+            if (terrain != null && !terrain.IsKeywordEnabled("_NORMALMAP")) { terrain.EnableKeyword("_NORMALMAP"); EditorUtility.SetDirty(terrain); }
             if (created > 0) report.AppendLine("• Creadas " + created + " plantillas de material en " + MaterialsDir);
         }
 
-        private static int MakeMaterial(string name, string shaderName, bool transparent, bool additive)
+        private static int MakeMaterial(string name, string shaderName, bool transparent, bool additive, Action<Material> configure = null)
         {
             string path = MaterialsDir + "/" + name + ".mat";
             if (AssetDatabase.LoadAssetAtPath<Material>(path) != null) return 0;
@@ -162,6 +207,7 @@ namespace Kolotopir.EditorTools
             if (shader == null) return 0;
             var m = new Material(shader) { name = name, enableInstancing = true };
             if (transparent) MaterialLibrary.ConfigureTransparent(m, additive);
+            configure?.Invoke(m);
             AssetDatabase.CreateAsset(m, path);
             return 1;
         }

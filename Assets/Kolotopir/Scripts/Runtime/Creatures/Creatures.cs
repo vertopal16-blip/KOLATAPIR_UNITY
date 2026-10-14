@@ -36,7 +36,7 @@ namespace Kolotopir
             _body = MaterialLibrary.TransparentInstance(new Color(0.55f, 0.65f, 1f, 0.55f));
             MaterialLibrary.SetEmission(_body, Pal.Echo * 0.6f);
             FlashMaterials.Add(_body);
-            var mb = new ModelBuilder();
+            var mb = new ModelBuilder { SmoothAngle = 70f, Detail = 1.4f };
             mb.For(_body).Sphere(new Vector3(0f, 0.75f, 0f), new Vector3(0.38f, 0.7f, 0.32f), 10, 7, Quaternion.identity);
             mb.For(_body).Sphere(new Vector3(0f, 1.55f, 0.05f), new Vector3(0.26f, 0.28f, 0.26f), 9, 6, Quaternion.identity);
             mb.For(_body).Cone(new Vector3(0f, 0.1f, 0f), 0.3f, -0.6f, 8, Quaternion.identity, false);
@@ -248,15 +248,15 @@ namespace Kolotopir
             InitHealth(85f, 4f, 0f);
             HoverHeight = 0f;
             _visual = K.Child(transform, "Visual");
-            _skin = MaterialLibrary.LitInstance(new Color(0.36f, 0.27f, 0.2f), 0.1f);
+            _skin = MaterialLibrary.SurfaceInstance(DetailKind.Hide, new Color(0.36f, 0.27f, 0.2f), 0.1f);
             FlashMaterials.Add(_skin);
-            var mb = new ModelBuilder();
+            var mb = new ModelBuilder { SmoothAngle = 70f, Detail = 1.4f };
             mb.For(_skin).Sphere(new Vector3(0f, 0.72f, 0f), new Vector3(0.55f, 0.48f, 0.85f), 10, 7, Quaternion.identity);
-            var moss = MaterialLibrary.Lit(Pal.Moss, 0.02f);
+            var moss = MaterialLibrary.Surface(DetailKind.Foliage, Pal.Moss, 0.02f);
             for (int i = 0; i < 4; i++) mb.For(moss).Rock(new Vector3(0f, 1.02f, -0.45f + i * 0.3f), new Vector3(0.6f, 0.3f, 0.45f), Quaternion.identity, 2000 + i, 0.3f, false);
             mb.Build(_visual, "Cuerpo");
             _head = K.Child(_visual, "Cabeza", new Vector3(0f, 0.72f, 0.75f));
-            var hb = new ModelBuilder();
+            var hb = new ModelBuilder { SmoothAngle = 70f, Detail = 1.4f };
             hb.For(_skin).Sphere(new Vector3(0f, 0f, 0.15f), new Vector3(0.3f, 0.3f, 0.38f), 8, 6, Quaternion.identity);
             hb.For(MaterialLibrary.Lit(new Color(0.42f, 0.3f, 0.26f))).Cylinder(new Vector3(0f, -0.06f, 0.45f), 0.12f, 0.11f, 0.12f, 8, Quaternion.Euler(90f, 0f, 0f));
             var tusk = MaterialLibrary.Lit(new Color(0.92f, 0.88f, 0.78f), 0.4f);
@@ -269,7 +269,7 @@ namespace Kolotopir
             for (int i = 0; i < 4; i++)
             {
                 var leg = K.Child(_visual, "Pata", new Vector3(i % 2 == 0 ? 0.28f : -0.28f, 0.45f, i < 2 ? 0.45f : -0.45f));
-                var lb = new ModelBuilder();
+                var lb = new ModelBuilder { SmoothAngle = 70f, Detail = 1.4f };
                 lb.For(_skin).Cylinder(new Vector3(0f, -0.45f, 0f), 0.09f, 0.11f, 0.45f, 6, Quaternion.identity);
                 lb.Build(leg, "Pata");
                 _legs[i] = leg;
@@ -422,8 +422,8 @@ namespace Kolotopir
             InitHealth(30f, 0f, 0f);
             _offset = new Vector3(Random.Range(-6f, 6f), 0f, Random.Range(-6f, 6f));
             _visual = K.Child(transform, "Visual");
-            var fur = MaterialLibrary.Lit(new Color(0.72f, 0.66f, 0.6f), 0.1f);
-            var mb = new ModelBuilder();
+            var fur = MaterialLibrary.Surface(DetailKind.Hide, new Color(0.72f, 0.66f, 0.6f), 0.1f);
+            var mb = new ModelBuilder { SmoothAngle = 70f, Detail = 1.4f };
             mb.For(fur).Sphere(new Vector3(0f, 1.0f, 0f), new Vector3(0.3f, 0.32f, 0.7f), 9, 6, Quaternion.identity);
             mb.For(fur).Cylinder(new Vector3(0f, 1.15f, 0.5f), 0.12f, 0.09f, 0.5f, 6, Quaternion.Euler(35f, 0f, 0f));
             mb.For(fur).Sphere(new Vector3(0f, 1.5f, 0.82f), new Vector3(0.13f, 0.14f, 0.22f), 7, 5, Quaternion.identity);
@@ -435,7 +435,7 @@ namespace Kolotopir
             for (int i = 0; i < 4; i++)
             {
                 var leg = K.Child(_visual, "Pata", new Vector3(i % 2 == 0 ? 0.15f : -0.15f, 0.82f, i < 2 ? 0.45f : -0.45f));
-                var lb = new ModelBuilder();
+                var lb = new ModelBuilder { SmoothAngle = 70f, Detail = 1.4f };
                 lb.For(fur).Cylinder(new Vector3(0f, -0.82f, 0f), 0.03f, 0.05f, 0.82f, 5, Quaternion.identity);
                 lb.Build(leg, "Pata");
                 _legs[i] = leg;
