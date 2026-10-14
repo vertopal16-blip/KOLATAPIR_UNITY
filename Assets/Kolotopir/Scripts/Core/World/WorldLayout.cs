@@ -416,7 +416,7 @@ namespace Kolotopir.Core
             new SpawnDef("eco_parada_c", "eco", 640, 785, 2, 6f),
             new SpawnDef("eco_noche_a", "eco", 405, 655, 3, 10f, false, true),
             new SpawnDef("eco_noche_b", "eco", 610, 470, 2, 8f, false, true),
-            new SpawnDef("guardian_parada", "guardian", 700, 760, 1, 0f, true),
+            new SpawnDef("guardian_parada", "guardian", 692, 751, 1, 0f, true), // delante de la Cápsula, hacia el arco
             new SpawnDef("jabali_oeste", "jabali", 420, 760, 1, 0f),
             new SpawnDef("jabali_este", "jabali", 880, 760, 1, 0f),
             new SpawnDef("corzos", "corzo", 600, 380, 5, 14f),
