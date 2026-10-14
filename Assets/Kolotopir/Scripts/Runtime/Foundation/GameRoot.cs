@@ -399,6 +399,8 @@ namespace Kolotopir
             bool listening = Game.Listener != null && Game.Listener.IsListening;
             Game.Audio.SetAmbience(WorldShape.RegionAt(player.x, player.z), Game.Sky.Night, listening || (Game.Resonance != null && Game.Resonance.Playing));
 
+            CheckCloudObservation(s, Time.unscaledDeltaTime);
+
             _checkTimer -= dt;
             if (_checkTimer <= 0f)
             {
@@ -424,6 +426,23 @@ namespace Kolotopir
             pos.y = Mathf.Max(Ground.Height(pos.x, pos.z) + 25f, 78f);
             _menuCam.transform.position = pos;
             _menuCam.transform.rotation = Quaternion.LookRotation((center + Vector3.up * 2f) - pos);
+        }
+
+        private float _cloudLook;
+
+        /// <summary>Misión «El nombre de la nube»: mirar la nube con el catalejo un momento.</summary>
+        private void CheckCloudObservation(GameState s, float dt)
+        {
+            var cloud = Game.Sky.QuestCloud;
+            if (cloud == null || s.Has("nube_observada") || s.Has("nube_nombrada") || !Game.Cam.Scoping) { _cloudLook = 0f; return; }
+            var cam = Game.Cam.Cam.transform;
+            var to = cloud.position - cam.position;
+            if (to.magnitude > 450f || Vector3.Angle(cam.forward, to) > 9f) { _cloudLook = Mathf.Max(0f, _cloudLook - dt); return; }
+            _cloudLook += dt;
+            if (_cloudLook < 1.5f) return;
+            Game.Ctx.SetFlag("nube_observada");
+            Game.Audio.Play2D("descubrir", 0.6f);
+            Game.Ctx.Notify("La nube parece un kolotapir dormido, con la tripa gris. Ya tienes algo que proponer a Bruma y Copo.");
         }
 
         private static bool InDanger(Vector3 p, float radius)

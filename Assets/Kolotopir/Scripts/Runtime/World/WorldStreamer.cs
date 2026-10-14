@@ -271,6 +271,16 @@ namespace Kolotopir
                 yield return SectorBuilder.Build(this, s, _layers, true);
                 FinishLoad(s);
             }
+            // Algún sector puede estar construyéndose en segundo plano: esperar a que termine.
+            float waited = 0f;
+            while (waited < 20f)
+            {
+                bool pending = false;
+                foreach (var s in list) if (!s.Loaded && s.Loading) pending = true;
+                if (!pending) break;
+                waited += Time.unscaledDeltaTime;
+                yield return null;
+            }
         }
 
         private void Update()
@@ -352,6 +362,19 @@ namespace Kolotopir
             foreach (var s in _sectors)
             {
                 if (s.Loaded) Unload(s);
+                else if (s.Loading)
+                {
+                    // Sector a medio construir: se descarta lo que hubiera.
+                    if (s.Root != null)
+                    {
+                        if (s.Terrain != null && s.Terrain.terrainData != null) Destroy(s.Terrain.terrainData);
+                        Destroy(s.Root);
+                    }
+                    s.Root = null;
+                    s.Terrain = null;
+                    s.Instances.Clear();
+                    if (s.Far != null) s.Far.SetActive(true);
+                }
                 s.Loading = false;
             }
         }

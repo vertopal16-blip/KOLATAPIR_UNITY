@@ -12,7 +12,8 @@ namespace Kolotopir
         private void Update()
         {
             Current = null;
-            bool blocked = !Game.InGame || (Game.UI != null && Game.UI.BlocksGameplay) || Game.Player == null || Game.Player.Frozen || Game.Player.IsClimbing;
+            bool blocked = !Game.InGame || (Game.UI != null && Game.UI.BlocksGameplay) || Game.Player == null || Game.Player.Frozen || Game.Player.IsClimbing
+                           || (Game.Resonance != null && Game.Resonance.Playing); // E salta frases de la Resonancia
             if (!blocked && Game.Cam != null && !Game.Cam.Scoping) Current = Find();
             if (Game.UI != null) Game.UI.SetPrompt(Current != null ? "[" + InputMap.KeyName(InputAction.Interactuar) + "]  " + Tokens.Apply(Current.Prompt) : null);
             if (!blocked && Current != null && InputMap.Down(InputAction.Interactuar)) Current.Interact();

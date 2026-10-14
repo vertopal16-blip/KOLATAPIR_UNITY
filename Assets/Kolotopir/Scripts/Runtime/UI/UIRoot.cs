@@ -97,7 +97,15 @@ namespace Kolotopir
         }
 
         /// <summary>Si la interfaz impide mover a Nilo, atacar o interactuar.</summary>
-        public bool BlocksGameplay => _stack.Count > 0 || (Game.Dialogue != null && Game.Dialogue.Active) || _fadeAlpha > 0.6f || Loading;
+        public bool BlocksGameplay => _stack.Count > 0 || (Game.Dialogue != null && Game.Dialogue.Active) || _fadeAlpha > 0.6f || Loading || Time.frameCount <= _holdUntilFrame;
+
+        private int _holdUntilFrame = -1;
+
+        /// <summary>
+        /// Tras cerrar una pantalla o un diálogo, la misma pulsación (E, clic) no debe llegar al juego
+        /// en ese fotograma ni en el siguiente (evita reabrir el diálogo o lanzar un tajo).
+        /// </summary>
+        public void HoldInput() => _holdUntilFrame = Time.frameCount + 1;
         public bool HideViewModel => _stack.Count > 0 || (Game.Dialogue != null && Game.Dialogue.Active) || (Game.Cam != null && Game.Cam.Scoping);
 
         public static UIRoot Create()
@@ -218,6 +226,7 @@ namespace Kolotopir
             _stack.Remove(s);
             s.Root.gameObject.SetActive(false);
             s.OnClose();
+            HoldInput();
             Game.Audio?.Play2D("ui_cerrar", 0.3f);
         }
 

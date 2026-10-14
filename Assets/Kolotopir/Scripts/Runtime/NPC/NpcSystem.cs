@@ -128,6 +128,14 @@ namespace Kolotopir
             SnapToSchedule();
         }
 
+        /// <summary>Las reglas de cambio de rutina crean entradas nuevas en cada consulta: se comparan por valor.</summary>
+        private static bool SameEntry(ScheduleEntry a, ScheduleEntry b)
+        {
+            if (ReferenceEquals(a, b)) return true;
+            if (a == null || b == null) return false;
+            return a.Node == b.Node && a.Activity == b.Activity && Mathf.Approximately(a.Start, b.Start) && Mathf.Approximately(a.End, b.End);
+        }
+
         private ScheduleEntry Desired()
         {
             var s = Game.State;
@@ -175,7 +183,7 @@ namespace Kolotopir
             _animTime += dt;
             _barkCooldown -= dt;
             var desired = Desired();
-            if (desired != _entry && !InDialogue)
+            if (!SameEntry(desired, _entry) && !InDialogue)
             {
                 _entry = desired;
                 _routeIndex = 0;
@@ -187,6 +195,7 @@ namespace Kolotopir
 
             if (InDialogue)
             {
+                if (Rig.Root.localPosition != Vector3.zero) ResetRig(); // se incorpora si estaba durmiendo
                 _speed = 0f;
                 _faceOverride = playerPos;
                 Face(playerPos, dt, 6f);

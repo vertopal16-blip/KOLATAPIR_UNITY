@@ -314,6 +314,7 @@ namespace Kolotopir
             if (_shot) { Game.Cam?.EndShot(); _shot = false; }
             Game.Cam?.ClearFocus();
             Game.UI?.ShowDialogue(false);
+            Game.UI?.HoldInput();
             Game.Audio?.Play2D("ui_cerrar", 0.3f);
             Game.MarkDirty();
             var pending = new List<Action>(_afterClose);
