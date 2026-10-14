@@ -506,7 +506,10 @@ namespace Kolotopir
                     Enqueue("Mantén {Catalejo} para mirar a lo lejos con el catalejo de Nilo. Rueda del ratón: zoom.");
                     break;
                 case "puente":
-                    Enqueue("El puente se balancea: mantén el equilibrio con {Izquierda} y {Derecha} cuando se incline.");
+                    Enqueue("El puente colgante se mece con el viento, pero aguanta. Si caes al vacío, Nilo vuelve al último suelo firme.");
+                    break;
+                case "equilibrio":
+                    Enqueue("Pasarela estrecha: corrige el equilibrio con {Izquierda} y {Derecha} cuando Nilo se incline (barra central).");
                     break;
             }
         }

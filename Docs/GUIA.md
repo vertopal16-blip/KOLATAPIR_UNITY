@@ -12,7 +12,7 @@ Recorrido de la historia para probar el prototipo de principio a fin. Los objeti
 6. **Hablar con Haro** en el puesto del puente (noreste, pasada la puerta). Te da la espada corta del Reverso y unos brazales: equípalos en el inventario (**Tab**).
 7. **Entrenar con el muñeco**: tres golpes (al menos uno cargado manteniendo clic izquierdo) y un bloqueo (clic derecho) cuando su brazo brille.
 8. **Despedirse de Gina** en la puerta del asentamiento.
-9. **Cruzar el puente colgante.** El puente se balancea: corrige con A y D. Si caes, Nilo vuelve al último suelo firme.
+9. **Cruzar el puente colgante.** El puente se mece, pero aguanta. Si caes al vacío, Nilo vuelve al último suelo firme.
 
 ## Capítulo II — Prados que Recuerdan · «Los Prados que Recuerdan»
 
@@ -28,7 +28,7 @@ Recorrido de la historia para probar el prototipo de principio a fin. Los objeti
 
 ## Misiones secundarias
 
-- **La colección de Boro**: una cuchara doblada (en lo alto del arco de piedra; trepa la enredadera), un botón de nácar (entre las flores al sur de la Colina de las Nubes) y una piedra con agujero (en el islote del lago: hay que nadar).
+- **La colección de Boro**: una cuchara doblada (en lo alto del arco de piedra; trepa la enredadera y cruza la pasarela estrecha corrigiendo el equilibrio con A y D), un botón de nácar (entre las flores al sur de la Colina de las Nubes) y una piedra con agujero (en el islote del lago: hay que nadar).
 - **El nombre de la nube**: Bruma y Copo discuten cómo se llama una nube. Mírala con el catalejo (**V**) desde la Colina de las Nubes y propón un nombre.
 - **El taller de Tomé**: lleva a Tomé tres fibras de junco (junto a los campos) y una resina (en el Árbol de los Mayores). Te enseña a usar la mesa de trabajo y las recetas de armadura; fabrica algo para completarla.
 

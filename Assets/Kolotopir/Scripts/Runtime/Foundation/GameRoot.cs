@@ -493,6 +493,7 @@ namespace Kolotopir
 
             // Tutoriales contextuales
             if (WorldShape.IsOnBridgeCorridor(p.x, p.z)) Game.Quests.Tutorial("puente");
+            if (Game.Player.IsBalancing) Game.Quests.Tutorial("equilibrio");
             if (Game.Sky.Night > 0.6f && s.Clock.Day >= 1 && s.PlaytimeSeconds > 120f) Game.Quests.Tutorial("noche");
             if (Game.Listener != null && Game.Listener.NearestSignal(out _) > 0.35f) Game.Quests.Tutorial("escucha");
             if (region == Region.PradosQueRecuerdan && s.HasItem("catalejo")) Game.Quests.Tutorial("catalejo");
