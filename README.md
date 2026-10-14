@@ -24,6 +24,12 @@ Si por algún motivo URP no se configura, el juego funciona igualmente con el pi
 
 Otros comandos del menú **KOLOTOPIR**: abrir la escena principal, borrar las partidas guardadas y validar el contenido narrativo (busca referencias rotas entre misiones, diálogos, objetos y Resonancias).
 
+### Si algo no se ve bien la primera vez
+
+- **Materiales rosas o mundo sin postprocesado:** ejecuta *KOLOTOPIR › Configurar proyecto (URP y materiales)* y vuelve a pulsar Play.
+- **Aviso sobre el sistema de entrada:** el prototipo usa el *Input Manager* clásico (*Project Settings › Player › Active Input Handling: Input Manager (Old)* o *Both*). Si Unity propone activar el nuevo Input System, responde que no.
+- **Volver a empezar desde cero:** *KOLOTOPIR › Borrar partidas guardadas*.
+
 ### Compilar un ejecutable
 
 *File › Build Profiles* (o *Build Settings*) › Windows › *Build*. La escena principal ya está incluida.
