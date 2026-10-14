@@ -106,7 +106,8 @@ namespace Kolotopir
                 {
                     Game.Audio?.Play2D("cortar", 0.6f);
                     Game.Ctx.Notify("Fabricado: " + (outDef != null ? outDef.Name : r.Name));
-                    if (outDef != null && (outDef.Category == ItemCategory.Armadura)) Game.Ctx.SetFlag("armadura_fabricada");
+                    Game.Ctx.SetFlag("primer_crafteo");
+                    if (outDef != null && outDef.Category == ItemCategory.Armadura) Game.Ctx.SetFlag("armadura_fabricada");
                     Game.MarkDirty();
                 }
                 Refresh();
@@ -147,6 +148,7 @@ namespace Kolotopir
                             s.RecomputeStats();
                             Game.Audio?.Play2D("nivel", 0.5f, 1.3f);
                             Game.Ctx.Notify("Mejora aplicada: " + upgrade.Name);
+                            Game.Ctx.SetFlag("primer_crafteo");
                             Game.MarkDirty();
                         }
                         Refresh();

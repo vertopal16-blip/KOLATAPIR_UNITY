@@ -125,11 +125,12 @@ namespace Kolotopir
 
         private void NewState(SaveData data)
         {
+            // El contexto se crea después: así preparar el estado no dispara avisos ni sonidos.
             var s = new GameState();
-            Game.State = s;
-            Game.Ctx = new RuntimeGameContext(s);
             if (data == null) s.NewGame();
             else SaveConverter.Apply(data, s);
+            Game.State = s;
+            Game.Ctx = new RuntimeGameContext(s);
         }
 
         private void CreatePlayer()

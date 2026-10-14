@@ -15,7 +15,6 @@ namespace Kolotopir
         private Vector3 _rPos, _lPos;
         private Quaternion _rRot, _lRot;
         private float _hitJolt;
-        private float _visible;
 
         public static ViewModel Create(Transform camera)
         {

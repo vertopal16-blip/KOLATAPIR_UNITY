@@ -237,7 +237,7 @@ namespace Kolotopir
         }
 
         /// <summary>Lista desplazable. Devuelve el contenido (con disposición vertical) donde añadir filas.</summary>
-        public static RectTransform Scroll(Transform parent, string name, out ScrollRect scroll, float spacing = 6f, int pad = 6)
+        public static RectTransform Scroll(Transform parent, string name, out ScrollRect scroll, float spacing = 6f, int pad = 6, bool vertical = true)
         {
             var view = Rect(parent, name);
             var bg = view.gameObject.AddComponent<Image>();
@@ -255,7 +255,7 @@ namespace Kolotopir
             content.pivot = new Vector2(0.5f, 1f);
             content.anchoredPosition = Vector2.zero;
             content.sizeDelta = Vector2.zero;
-            VLayout(content, spacing, pad);
+            if (vertical) VLayout(content, spacing, pad);
             FitVertical(content);
             scroll.content = content;
             scroll.viewport = view;

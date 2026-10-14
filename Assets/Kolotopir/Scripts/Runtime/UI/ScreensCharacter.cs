@@ -124,7 +124,7 @@ namespace Kolotopir
 
         public static readonly Appearance NiloLook = new Appearance
         {
-            Height = 1.52f, Build = 0.92f, Skin = "#C99A78", Hair = "#0B0A0E", Eyes = "#7FD3F0",
+            Height = 1.7f, Build = 0.95f, Skin = "#C99A78", Hair = "#0B0A0E", Eyes = "#7FD3F0",
             Cloth = "#6B2E8C", Cloth2 = "#4A1F63", Accent = "#C9A14A", Pants = "#3E3A4A", HairStyle = "despeinado",
         };
 
@@ -352,9 +352,8 @@ namespace Kolotopir
 
             var gridHolder = U.PanelImg(_itemsPage, "Objetos", new Color(0f, 0f, 0f, 0.25f));
             U.Place(gridHolder.rectTransform, U.TopLeft, new Vector2(420f, -100f), new Vector2(700f, 732f));
-            _grid = U.Scroll(gridHolder.transform, "Lista", out _, 6f, 8);
+            _grid = U.Scroll(gridHolder.transform, "Lista", out _, 6f, 8, false);
             U.Stretch((RectTransform)_grid.parent);
-            UnityEngine.Object.Destroy(_grid.GetComponent<VerticalLayoutGroup>());
             U.Grid(_grid, new Vector2(126f, 136f), new Vector2(8f, 8f), 5);
             _grid.GetComponent<GridLayoutGroup>().padding = new RectOffset(10, 10, 10, 10);
 
@@ -369,7 +368,7 @@ namespace Kolotopir
             var left2 = U.PanelImg(_charPage, "Nilo", new Color(0f, 0f, 0f, 0.25f));
             U.Place(left2.rectTransform, U.TopLeft, Vector2.zero, new Vector2(400f, 832f));
             _doll2 = BuildDoll(left2.rectTransform, new Vector2(380f, 600f));
-            var bio = U.Txt(left2.transform, "Bio", "Nilo · 12 años · Tribu del Reverso\nCurioso, valiente, despistado, empático e impulsivo. La túnica morada se la regaló la abuela Gina.", 17, U.Dim);
+            var bio = U.Txt(left2.transform, "Bio", "Nilo · unos 16 años · Tribu del Reverso\nCurioso, observador y soñador. Pelo negro azabache, ojos azul claro y la túnica morada que le regaló la abuela Gina: cree que le da suerte.", 17, U.Dim);
             U.Place(bio.rectTransform, U.TopLeft, new Vector2(14f, -620f), new Vector2(372f, 200f));
             var attrPanel = U.PanelImg(_charPage, "Atributos", new Color(0f, 0f, 0f, 0.3f));
             U.Place(attrPanel.rectTransform, U.TopLeft, new Vector2(420f, 0f), new Vector2(520f, 832f));

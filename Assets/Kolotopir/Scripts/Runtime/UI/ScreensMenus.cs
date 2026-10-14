@@ -51,7 +51,7 @@ namespace Kolotopir
             var at = U.Scroll(_about, "Texto", out _, 10f, 28);
             U.Stretch((RectTransform)at.parent);
             U.Header(at, "Acerca de KOLOTOPIR", 30);
-            U.Para(at, "Nilo, un niño de doce años de la Tribu del Reverso, emprende su primer viaje para descubrir qué ocurrió con sus padres, Eira y Daren, desaparecidos tras investigar una Cápsula sellada.\n\nEn Orom, los recuerdos de las personas, los lugares y los objetos dejan huella. La Escucha permite oír las Resonancias que quedan en las Cápsulas y en el mundo. Recordar también es actuar: lo que decidas hacer con lo que oyes tiene consecuencias.", 19);
+            U.Para(at, "Nilo, un chico de unos dieciséis años de la Tribu del Reverso, emprende su primer viaje para descubrir qué ocurrió con sus padres, Eira y Daren, desaparecidos tras investigar una Cápsula sellada.\n\nEn Orom, los recuerdos de las personas, los lugares y los objetos dejan huella. La Escucha permite oír las Resonancias que quedan en las Cápsulas y en el mundo. Recordar también es actuar: lo que decidas hacer con lo que oyes tiene consecuencias.", 19);
             U.Header(at, "Controles", 24);
             var keys = new List<string>();
             foreach (InputAction a in Enum.GetValues(typeof(InputAction))) keys.Add(U.Colored(InputMap.KeyName(a), U.Accent) + "  " + InputMap.Label(a));

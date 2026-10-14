@@ -10,7 +10,6 @@ namespace Kolotopir
         private Material _glow;
         private float _counterAt = -1f;
         private float _spin;
-        private bool _swinging;
 
         public bool IsAlive => true;
         public bool Hostile => false;
@@ -72,7 +71,7 @@ namespace Kolotopir
             {
                 float left = _counterAt - Time.time;
                 glow = Mathf.Clamp01(1f - left / 0.9f);
-                if (!_swinging && Game.Player != null)
+                if (Game.Player != null)
                 {
                     // El brazo gira hacia Nilo y brilla antes de golpear.
                     var to = Game.Player.transform.position - transform.position;

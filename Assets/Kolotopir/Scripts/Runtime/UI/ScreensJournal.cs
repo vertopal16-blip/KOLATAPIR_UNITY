@@ -23,7 +23,6 @@ namespace Kolotopir
         // Atlas
         private RawImage _map;
         private RectTransform _mapRect, _markers, _fog;
-        private RectTransform _playerMarker, _targetMarker;
         private Text _atlasInfo;
         private static Texture2D _mapTex;
         private const float MapSize = 800f;

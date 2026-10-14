@@ -174,7 +174,6 @@ namespace Kolotopir
         private DialogueNode _shown;
         private float _openedAt;
         private bool _shot;
-        private float _autoTimer;
         private int _len;
 
         public bool SpeakerIs(NpcAgent agent) => Active && Runner.Current != null && agent != null && Runner.Current.Speaker == agent.Def.Name && !FullyRevealed;
@@ -230,7 +229,6 @@ namespace Kolotopir
             _shown = n;
             Reveal = 0f;
             _len = CurrentText.Length;
-            _autoTimer = 0f;
             var speaker = Game.Npcs != null ? FindSpeaker(n.Speaker) : null;
             if (speaker != null)
             {
